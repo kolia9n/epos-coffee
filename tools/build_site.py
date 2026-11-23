@@ -13,15 +13,9 @@ HOURS = [("Monday", "08:00", "17:00"), ("Tuesday", "08:00", "17:00"), ("Wednesda
          ("Thursday", "08:00", "17:00"), ("Friday", "08:00", "17:00"), ("Saturday", "09:00", "17:00"),
          ("Sunday", "09:30", "17:00")]
 
-SPECIALS = [  # Mon..Sun: numeral, day, name, pairing, price, img, chapter line, start
-    ("I", "Monday", "Egg Monday", "EPŌS Scramble & Latte", 17, "monday", "Scramble on sourdough with gouda and onion jam. A latte, hot or iced.", "9:00"),
-    ("II", "Tuesday", "Bagel Tuesday", "Bagel & Americano", 14, "tuesday", "Any bagel sandwich from the kitchen. An Americano, hot or iced.", "9:00"),
-    ("III", "Wednesday", "Panini Wednesday", "Panini & Americano", 18, "wednesday", "A hot panini, pressed to order. An Americano, hot or iced.", "9:00"),
-    ("IV", "Thursday", "Quiche Thursday", "Quiche & Drip Coffee", 12, "thursday", "A slice of quiche baked here. Freshly brewed drip coffee.", "9:00"),
-    ("V", "Friday", "Croissant Friday", "Croissant & Latte", 21, "friday", "A croissant sandwich, built when you order. A latte, hot or iced.", "9:00"),
-    ("VI", "Saturday", "Brunch Saturday", "Shakshuka & Chai Latte", 18, "saturday", "Shakshuka in the pan, with a chai latte alongside.", "9:00"),
-    ("VII", "Sunday", "Sweet Sunday", "Sticky Toffee & Latte", 15, "sunday", "Warm sticky toffee with ice cream. A latte, hot or iced. From 9:30.", "9:30"),
-]
+import sys
+sys.path.insert(0, "/home/claude/gen")
+from specials_data import SPECIALS, EXTRA, window
 
 MENU = {  # food: whole-dollar prices
     "Warm": [
@@ -52,7 +46,7 @@ MENU = {  # food: whole-dollar prices
 }
 DRINKS = {
     "Coffee": [
-        ("Espresso", "Two prices: 12 oz / 16 oz", [("Espresso", "Single shot · 4 oz", "2.85"), ("Doppio", "Double shot · 4 oz", "3.60"),
+        ("Espresso", "Where there are two prices: 12 oz / 16 oz", [("Espresso", "Single shot · 4 oz", "2.85"), ("Doppio", "Double shot · 4 oz", "3.60"),
             ("Macchiato", "A dash of milk · 8 oz", "3.85"), ("Cappuccino", "Small / large", "4.65 / 5.90"), ("Flat White", "Silky milk, thin foam · 8 oz", "5.10"),
             ("Americano", "", "3.85 / 4.35"), ("Latte", "", "6.25 / 7.35"), ("Mocha", "", "6.60 / 7.35")]),
         ("Iced & Drip", None, [("Drip Coffee", "", "2.25 / 2.60"), ("Cold Brew", "", "4.00"), ("Iced Americano", "", "3.85 / 4.35"),
@@ -75,7 +69,11 @@ def nice(s):
     h, m = map(int, s.split(":")); h12 = h - 12 if h > 12 else h
     return f"{h12}:{m:02d}" if m else f"{h12}"
 
+def fp(p):
+    return " / ".join(x.strip()[:-3] if x.strip().endswith(".00") else x.strip() for x in p.split("/"))
+
 def item_html(n, d, p):
+    p = fp(p)
     return ('<li class="it"><span class="nm">%s</span><span class="ld" aria-hidden="true"></span><span class="pr">%s</span>%s</li>'
             % (E(n), E(p), ('<span class="ds">%s</span>' % E(d)) if d else ""))
 
@@ -104,7 +102,7 @@ CSS = r"""
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:80px}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:136px}
 html,body{overflow-x:clip}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 body{margin:0;background:var(--ink) NOISE_INK;color:var(--body);font:18px/1.6 var(--f-body);font-variant-numeric:lining-nums}
@@ -127,7 +125,7 @@ h2{font:500 clamp(36px,4.2vw,50px)/1.06 var(--f-display);color:var(--head)}
 .rule b{font:400 17px/1 var(--f-body);transform:translateY(1px)}
 .rule i{width:4px;height:4px;background:var(--gold);transform:rotate(45deg)}
 
-header{position:sticky;top:0;z-index:30;background:rgba(20,31,29,.95);backdrop-filter:blur(6px)}
+header{position:sticky;top:0;z-index:30;background:rgba(20,31,29,.97)}
 .nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:72px;padding:0 40px}
 .nav ul{display:flex;gap:32px;list-style:none;margin:0;padding:0}
 .nav ul a{text-decoration:none;color:var(--soft);padding:10px 0;background:linear-gradient(var(--gold),var(--gold)) 50% 100%/0 1px no-repeat;transition:background-size .25s,color .2s}
@@ -140,9 +138,9 @@ header{position:sticky;top:0;z-index:30;background:rgba(20,31,29,.95);backdrop-f
 .btn:hover{background:var(--gold);color:var(--ink-deep)}
 .btn.solid{background:var(--gold);color:var(--ink-deep);font:500 20px/1 var(--f-display);letter-spacing:0;text-transform:none;padding:0 26px;min-height:54px}
 .btn.solid:hover{background:#d8b973}
-.link{color:var(--head);text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:3px}
+.link{color:var(--head);display:inline-flex;align-items:center;min-height:44px;text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:1px;text-underline-offset:6px}
 .link:hover{color:var(--gold)}
-.paper .link,.paper-2 .link{color:var(--ink);border-color:var(--gold-paper)}
+.paper .link,.paper-2 .link{color:var(--ink);text-decoration-color:var(--gold-paper)}
 
 .status{display:inline-flex;align-items:center;gap:10px;color:var(--body);font-size:18px}
 .status .dot{width:8px;height:8px;border-radius:50%;background:#8fae86;box-shadow:0 0 0 4px rgba(143,174,134,.18)}
@@ -160,7 +158,7 @@ footer img{width:96px;margin:0 auto 18px}
 footer .tag{font:italic 500 22px/1.3 var(--f-display);color:var(--head);margin:0 0 16px}
 footer p{margin:6px 0;color:var(--soft);font-size:16px}
 footer nav{display:flex;justify-content:center;gap:26px;margin-top:18px;flex-wrap:wrap}
-footer nav a{color:var(--soft);text-decoration:none}
+footer nav a{color:var(--soft);text-decoration:none;padding:14px 6px}
 footer nav a:hover{color:var(--head)}
 @media (max-width:760px){
   .wrap{padding:0 22px}
@@ -180,7 +178,8 @@ HOME_CSS = r"""
 .hero .grid{display:grid;grid-template-columns:7fr 5fr;gap:64px;align-items:center}
 .hero .kick{display:block;font:600 15px/1.3 var(--f-sc);letter-spacing:.12em;color:var(--gold);margin-bottom:22px}
 .hero h1 .t{display:block;font:500 clamp(42px,5.4vw,76px)/1.04 var(--f-display);color:var(--head);max-width:14ch}
-.hero .rule{margin:34px 0 26px}
+.hero .rule{margin:30px 0 24px}
+.hero .tag{font:italic 500 clamp(22px,2.2vw,28px)/1.3 var(--f-display);color:var(--soft);margin:16px 0 0;max-width:30ch}
 .hero .ctas{display:flex;align-items:center;gap:28px;margin-top:30px;flex-wrap:wrap}
 .hero .note{font:italic 400 17px/1.4 var(--f-body);color:var(--soft);margin:14px 0 0}
 .card{background:#f7f1e3;padding:6px;transform:rotate(-1.4deg);box-shadow:0 30px 50px -28px rgba(0,0,0,.75);max-width:420px;justify-self:end;width:100%}
@@ -191,15 +190,21 @@ HOME_CSS = r"""
 .specials .head{display:grid;grid-template-columns:5fr 7fr;gap:48px;align-items:end;margin-bottom:44px}
 .specials h2{max-width:15ch;margin-top:14px}
 .specials .lede{margin:0;max-width:46ch;color:var(--soft-paper)}
-.week{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,1fr);gap:16px}
+.week{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:36px 22px}
 .week li{position:relative}
 .week img{width:100%;aspect-ratio:4/5;object-fit:cover;box-shadow:0 14px 24px -18px rgba(20,31,29,.6)}
 .week .rn{display:block;font:600 14px/1 var(--f-sc);letter-spacing:.08em;color:var(--gold-paper);margin:14px 0 6px}
 .week .wn{display:block;font:500 21px/1.15 var(--f-display);color:var(--ink)}
 .week .wp{font:500 17px/1 var(--f-body);color:var(--gold-paper);margin-left:6px}
 .week .ch{display:block;font:italic 400 15px/1.4 var(--f-body);color:var(--soft-paper);margin-top:6px}
-.week li.today img{outline:2px solid var(--gold-paper);outline-offset:4px}
-.week .tag{position:absolute;top:10px;left:10px;z-index:1;font:500 11px/1 var(--f-ui);letter-spacing:.14em;text-transform:uppercase;background:var(--ink);color:var(--paper);padding:5px 7px}
+.week li.today img{outline:2px solid var(--gold-paper);outline-offset:3px}
+.week li.xtra{border:1px solid var(--gold-paper);padding:26px 22px;align-self:start}
+.week li.xtra .rn{margin-top:0}
+.cnav{display:none;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
+.cbtn{width:48px;height:48px;border-radius:50%;border:1px solid var(--gold-paper);background:transparent;color:var(--ink);font:400 22px/1 var(--f-body);cursor:pointer}
+.cbtn:disabled{opacity:.3}
+.chint{font:500 12px/1 var(--f-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-paper)}
+.week .tag{display:inline-block;margin:0 8px 8px 0;vertical-align:middle;font:500 11px/1 var(--f-ui);letter-spacing:.14em;text-transform:uppercase;background:var(--ink);color:var(--paper);padding:5px 7px}
 
 .kitchen{padding:104px 0 96px}
 .kitchen .grid{display:grid;grid-template-columns:5fr 7fr;gap:56px;align-items:end}
@@ -220,19 +225,25 @@ HOME_CSS = r"""
 .stamp h3{font:500 24px/1.2 var(--f-display);color:var(--head)}
 .stamp p{margin:6px 0 0;color:var(--soft);font-size:17px}
 
-@media (max-width:1000px){.week{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:1000px){.week{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:900px){
   .hero .grid,.specials .head,.kitchen .grid,.visit .grid{grid-template-columns:1fr;gap:36px}
   .card{justify-self:center;max-width:320px}
 }
 @media (max-width:760px){
   .hero{padding:36px 0 64px}
-  .hero .rule{margin:24px 0 18px}
+  .hero .rule{display:none}
+  .hero .status{margin-top:18px}
+  .card{max-width:260px;margin-top:8px}
   .hero .ctas{flex-direction:column;align-items:stretch;gap:18px;margin-top:22px}
   .hero .ctas .link{align-self:flex-start}
   .specials,.kitchen,.visit{padding:72px 0}
-  .week{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:14px;padding-bottom:8px;margin-right:-22px}
-  .week li{flex:0 0 46%;scroll-snap-align:start}
+  .week{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;padding:6px 22px 10px;margin:0 -22px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .week::-webkit-scrollbar{display:none}
+  .week li{flex:0 0 74%;scroll-snap-align:center}
+  .week li.xtra{flex-basis:64%;align-self:center}
+  .cnav{display:flex}
+
 }
 """
 
@@ -254,22 +265,37 @@ MENU_CSS = r"""
 .grp .gn{font:italic 400 16px/1.4 var(--f-body);color:var(--soft);margin:0 0 4px}
 .grp ul{list-style:none;margin:0;padding:0}
 .extras{color:var(--soft);font-size:17px;margin:0 0 8px}
+.daily{border:1px solid var(--gold);padding:30px 34px 22px;margin:8px 0 26px}
+.daily .colhead{display:flex;justify-content:space-between;align-items:baseline;gap:20px;flex-wrap:wrap}
+.daily .colhead p{margin:0;color:var(--soft);font-style:italic}
+.daily ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:4px 56px}
+.daily li{padding:12px 0;border-bottom:1px solid var(--rule)}
+.daily .dd{display:block;font:600 14px/1 var(--f-sc);letter-spacing:.08em;color:var(--gold)}
+.daily .nm{font:500 21px/1.25 var(--f-display);color:var(--head)}
+.daily .pr{float:right;font:500 19px/1.3 var(--f-body);color:var(--gold);font-variant-numeric:lining-nums}
+.daily .ds{display:block;font:italic 400 16px/1.4 var(--f-body);color:var(--soft);margin-top:2px}
+.daily li.today{background:rgba(197,163,94,.08);margin:0 -12px;padding:12px}
+.daily .tg{display:inline-block;font:500 11px/1 var(--f-ui);letter-spacing:.14em;text-transform:uppercase;background:var(--gold);color:var(--ink);padding:5px 7px;margin-right:8px;vertical-align:middle}
+@media (max-width:900px){.daily ul{grid-template-columns:1fr}.daily{padding:24px 20px 14px}}
+@media (max-width:760px){.daily li:not(.today) .ds{display:none}html{scroll-padding-top:124px}}
 .allergy{font-style:italic;color:var(--soft);font-size:16px;padding:8px 0 64px;margin:0}
 @media (max-width:900px){.band{grid-template-columns:1fr;gap:0}}
 @media (max-width:760px){.jump{top:60px;-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}.jump ul{padding:0 22px}.mhead{padding-top:36px}}
 """
 
 STATUS_JS = r"""
+var EP_END=%s;
 var EP_H=[["Sunday","09:30","17:00"],["Monday","08:00","17:00"],["Tuesday","08:00","17:00"],["Wednesday","08:00","17:00"],["Thursday","08:00","17:00"],["Friday","08:00","17:00"],["Saturday","09:00","17:00"]];
 function epMin(s){var p=s.split(":");return +p[0]*60+(+p[1])}
 function epNice(s){var x=epMin(s),h=Math.floor(x/60),k=x%60,h12=h>12?h-12:h;return h12+(k?":"+(k<10?"0":"")+k:"")+(h<12?" AM":" PM")}
 function eposNow(){var d,m;try{var o={};new Intl.DateTimeFormat("en-CA",{timeZone:"America/Toronto",weekday:"long",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).forEach(function(p){o[p.type]=p.value});d=EP_H.map(function(h){return h[0]}).indexOf(o.weekday);m=(+o.hour)*60+(+o.minute);}catch(e){var t=new Date();d=t.getDay();m=t.getHours()*60+t.getMinutes();}
 var t=EP_H[d],open=m>=epMin(t[1])&&m<epMin(t[2]),txt;
 if(open)txt="Open now · until "+epNice(t[2]);else if(m<epMin(t[1]))txt="Closed · opens today at "+epNice(t[1]);else txt="Closed · opens tomorrow at "+epNice(EP_H[(d+1)%7][1]);
-var useTomorrow=m>=13*60, mon=(d+6)%7, sp=useTomorrow?(mon+1)%7:mon;
-return {dow:d,mon:mon,open:open,text:txt,sp:sp,tomorrow:useTomorrow};}
+var mon=(d+6)%7, endM=(typeof EP_END!=="undefined")?epMin(EP_END[mon]):13*60, useTomorrow=m>=endM, sp=useTomorrow?(mon+1)%7:mon;
+return {dow:d,mon:mon,m:m,open:open,text:txt,sp:sp,tomorrow:useTomorrow};}
 function eposStatus(id){var n=eposNow(),el=document.getElementById(id);if(!el)return n;el.classList.toggle("closed",!n.open);el.querySelector(".st").textContent=n.text;return n;}
 """
+STATUS_JS = STATUS_JS.replace("EP_END=%s", "EP_END=" + json.dumps([x["end"] for x in SPECIALS]))
 
 BUSINESS = {
     "@context": "https://schema.org", "@type": "CafeOrCoffeeShop", "@id": SITE + "#cafe", "name": "EPŌS Coffee Bar",
@@ -321,7 +347,7 @@ def header(cur, root=""):
 
 def bar(cur, root=""):
     m = ' aria-current="page"' if cur == "menu" else ""
-    mid = (f'<a href="{ORDER_URL}" rel="noopener">Order</a>' if ORDER_URL else f'<a href="{root}index.html#specials">Today</a>')
+    mid = (f'<a href="{ORDER_URL}" rel="noopener">Order</a>' if ORDER_URL else (f'<a href="#daily">Today</a>' if cur == "menu" else f'<a href="{root}index.html#specials">Today</a>'))
     return f"""<nav class="bar ui" aria-label="Quick links">
   <a href="{root}menu.html"{m}>Menu</a>{mid}<a href="{MAPS}" target="_blank" rel="noopener">Directions</a>
 </nav>
@@ -332,27 +358,36 @@ def footer(root=""):
   <img src="{root}img/logo-sm.webp" alt="EPŌS Coffee Bar, established 2024" width="200" height="200" loading="lazy">
   <p class="tag">Where every cup is a ritual, every bite a story.</p>
   <p>290 Gerrard St E, Toronto · Mon–Fri 8–5 · Sat 9–5 · Sun 9:30–5</p>
-  <nav class="ui" aria-label="Footer"><a href="{root}menu.html">Menu</a><a href="{root}online-ordering.html">Order online</a><a href="{IG}" target="_blank" rel="noopener">Instagram</a><a href="{MAPS}" target="_blank" rel="noopener">Directions</a></nav>
+  <nav class="ui" aria-label="Footer"><a href="{root}menu.html">Menu</a><a href="{IG}" target="_blank" rel="noopener">Instagram</a><a href="{MAPS}" target="_blank" rel="noopener">Directions</a></nav>
 </footer>
 """
 
 def specials_json():
-    return json.dumps([{"rn": s[0], "day": s[1], "name": s[2], "pair": s[3], "price": s[4], "img": s[5], "start": s[7]} for s in SPECIALS], ensure_ascii=False)
+    return json.dumps([{"day": s["day"], "name": s["name"], "pair": s["pair"], "price": s["price"], "img": s["img"],
+                        "end": s["end"], "win": window(s), "inc": s["inc"]} for s in SPECIALS], ensure_ascii=False)
+
+
+def hero_js():
+    return (STATUS_JS + '(function(){var S=' + specials_json() + ';var n=eposNow(),s=S[n.sp],c=document.getElementById("heroCard");'
+            'c.src="img/specials/"+s.img+".webp";c.alt=s.name+": "+s.pair+", $"+s.price;})();')
 
 def build_home():
     week = "".join(
-        f'<li data-i="{i}"><img src="img/specials/{s[5]}-sm.webp" alt="{E(s[2])}: {E(s[3])}, ${s[4]}" width="300" height="375" loading="lazy">'
-        f'<span class="rn">{s[0]} · {s[1]}</span><span class="wn">{E(s[2])}<span class="wp">${s[4]}</span></span><span class="ch">{E(s[6])}</span></li>'
+        f'<li data-i="{i}"><picture><img src="img/specials/{s["img"]}-sm.webp" srcset="img/specials/{s["img"]}-sm.webp 300w, img/specials/{s["img"]}.webp 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="{E(s["name"])}: {E(s["pair"])}, ${s["price"]}" width="300" height="375" loading="lazy"></picture>'
+        f'<div class="tx"><span class="rn">{s["day"]} · {window(s)}</span><span class="wn">{E(s["name"])}<span class="wp">${s["price"]}</span></span><span class="ch">{E(s["desc"])}</span></div></li>'
         for i, s in enumerate(SPECIALS))
+    week += (f'<li class="xtra"><div class="tx"><span class="rn">{EXTRA["days"]} · {window(EXTRA)}</span><span class="wn">{E(EXTRA["name"])}'
+             f'<span class="wp">${EXTRA["price"]}</span></span><span class="ch">{E(EXTRA["desc"])}</span></div></li>')
     hours = "".join(f'<li data-d="{(i + 1) % 7}"><span>{d}</span><span>{nice(o)}–{nice(c)}</span></li>' for i, (d, o, c) in enumerate(HOURS))
     page = head("EPŌS Coffee Bar | Coffee & Breakfast in Cabbagetown, Toronto",
-                "Coffee bar and kitchen at 290 Gerrard St E, Toronto. A different breakfast special with coffee every day until 1 PM. Borscht, quiche, croissant sandwiches and cakes.",
+                "Coffee bar and kitchen at 290 Gerrard St E, Toronto. A different daily special every day of the week. Borscht, quiche, croissant sandwiches and cakes.",
                 "", HOME_CSS, BUSINESS)
     page += header("home") + f"""<main>
 <section class="hero">
   <div class="wrap grid">
     <div>
-      <h1><span class="kick">EPŌS Coffee Bar · Cabbagetown, Toronto</span><span class="t">Where every cup is a ritual, every bite a story.</span></h1>
+      <h1><span class="kick">EPŌS Coffee Bar · 290 Gerrard St E</span><span class="t">Cabbagetown’s hot kitchen.</span></h1>
+      <p class="tag">Breakfast &amp; lunch until 5, coffee all day.</p>
       <div class="rule" aria-hidden="true"><b>✱</b><i></i><b>✱</b></div>
       <div class="status" id="status"><span class="dot"></span><span class="st">Mon–Fri 8–5 · Sat 9–5 · Sun 9:30–5</span></div>
       <div class="ctas">
@@ -361,17 +396,21 @@ def build_home():
       </div>
       <p class="note" id="spNote"></p>
     </div>
-    <figure class="card" style="margin:0"><img id="heroCard" src="img/specials/monday.webp" alt="" width="720" height="900"><figcaption id="heroCap"></figcaption></figure>
+    <figure class="card" style="margin:0"><img id="heroCard" alt="" width="720" height="900" fetchpriority="high"><noscript><img src="img/specials/monday.webp" alt="Egg Monday special" width="720" height="900"></noscript><figcaption id="heroCap"></figcaption></figure>
+    <script>{hero_js()}</script>
   </div>
 </section>
 
 <section class="specials paper" id="specials" aria-labelledby="sp-h">
   <div class="wrap">
     <div class="head">
-      <div><div class="label">Every day until 1 PM</div><h2 id="sp-h">A plate and a&nbsp;coffee. One price.</h2></div>
-      <p class="lede">Seven days, seven pairings, from Egg Monday to Sweet Sunday. Served from opening until 1 PM, while it lasts.</p>
+      <div><div class="label">Daily specials</div><h2 id="sp-h">One plate a day. One price.</h2></div>
+      <p class="lede">Seven days, seven specials, from Egg Monday to Sweet Sunday. Each costs less than ordering the same things separately. Tuesday to Thursday all day, Friday to Monday until 1, Sunday pudding from noon.</p>
     </div>
-    <ol class="week" id="week">{week}</ol>
+    <div class="carousel">
+      <ol class="week" id="week">{week}</ol>
+      <div class="cnav ui" aria-hidden="true"><button type="button" class="cbtn" id="cPrev" aria-label="Previous special">&#8592;</button><span class="chint">Swipe for the week</span><button type="button" class="cbtn" id="cNext" aria-label="Next special">&#8594;</button></div>
+    </div>
   </div>
 </section>
 
@@ -413,17 +452,32 @@ var S={specials_json()};
 var n=eposStatus("status");eposStatus("status2");
 document.querySelectorAll("#hours li").forEach(function(li){{if(+li.dataset.d===n.dow)li.classList.add("now");}});
 var s=S[n.sp], when=n.tomorrow?"Tomorrow":"Today";
-var card=document.getElementById("heroCard");card.src="img/specials/"+s.img+".webp";card.alt=s.name+": "+s.pair+", $"+s.price;
-document.getElementById("heroCap").textContent=s.rn+" · "+s.day+" · from "+(s.start==="9:30"?"9:30":"9")+" AM until 1 PM";
-document.getElementById("spBtn").textContent=when+": "+s.name+" — $"+s.price;
-document.getElementById("spNote").textContent=n.tomorrow?"Today's special has finished. Here's tomorrow's.":"Until 1 PM, coffee included.";
-var li=document.querySelector('#week li[data-i="'+n.sp+'"]');if(li){{li.classList.add("today");var t=document.createElement("span");t.className="tag";t.textContent=when;li.prepend(t);}}
+document.getElementById("heroCap").textContent=s.day+" · "+s.win;
+var cc=(n.dow>=2&&n.dow<=4&&n.m>=14*60&&n.m<17*60);
+document.getElementById("spBtn").textContent=cc?"Now: Coffee & Cake — ${EXTRA["price"]}":when+": "+s.name+" — $"+s.price;
+document.getElementById("spNote").textContent=cc?"Any cake and a 12 oz latte, chai, matcha or London Fog, until 5.":(n.tomorrow?"Today's special has finished. Here's tomorrow's.":"Served "+s.win+", while it lasts.");
+var li=document.querySelector('#week li[data-i="'+n.sp+'"]');if(li){{li.classList.add("today");var t=document.createElement("span");t.className="tag";t.textContent=when;var tx=li.querySelector(".tx");tx.insertBefore(t,tx.firstChild);}}
+setInterval(function(){{eposStatus("status");eposStatus("status2");}},60000);
+var w=document.getElementById("week"),pv=document.getElementById("cPrev"),nx=document.getElementById("cNext");
+function step(){{var a=w.children[0],b=w.children[1];return b.offsetLeft-a.offsetLeft;}}
+function upd(){{pv.disabled=w.scrollLeft<8;nx.disabled=w.scrollLeft+w.clientWidth>=w.scrollWidth-8;}}
+pv.onclick=function(){{w.scrollBy({{left:-step(),behavior:"smooth"}});}};nx.onclick=function(){{w.scrollBy({{left:step(),behavior:"smooth"}});}};
+w.addEventListener("scroll",upd,{{passive:true}});
+if(li&&getComputedStyle(w).display==="flex"){{w.scrollLeft=li.offsetLeft-(w.clientWidth-li.clientWidth)/2;}}upd();
 }})();
 </script>
 </body>
 </html>
 """
     open(os.path.join(OUT, "index.html"), "w").write(page)
+
+def daily_html():
+    rows = "".join(f'<li data-i="{i}"><span class="dd">{s["day"]} · {window(s)}</span><span class="pr">${s["price"]}</span>'
+                   f'<span class="nm">{E(s["name"])}</span><span class="ds">{E(s["desc"])}</span></li>' for i, s in enumerate(SPECIALS))
+    rows += (f'<li><span class="dd">{EXTRA["days"]} · {window(EXTRA)}</span><span class="pr">${EXTRA["price"]}</span>'
+             f'<span class="nm">{E(EXTRA["name"])}</span><span class="ds">{E(EXTRA["desc"])}</span></li>')
+    return (f'<section class="daily" id="daily"><div class="colhead"><h2>Daily Specials</h2><p>Each one costs less than ordering separately.</p></div>'
+            f'<ul>{rows}</ul></section>')
 
 def build_menu():
     def band(sections, cols):
@@ -448,12 +502,13 @@ def build_menu():
 <div class="mhead wrap">
   <div class="label">EPŌS Coffee Bar · 290 Gerrard St E</div>
   <h1>The Menu</h1>
-  <p>Daily specials <span style="white-space:nowrap">until 1 PM</span> · Dine in &amp; takeaway</p>
+  <p>A daily special every day · Dine in &amp; takeaway</p>
 </div>
 <nav class="jump ui" aria-label="Menu sections"><ul id="jump">
-  <li><a href="#warm">Warm</a></li><li><a href="#fresh">Fresh</a></li><li><a href="#sweet">Sweet</a></li><li><a href="#coffee">Coffee</a></li><li><a href="#signature">Signature</a></li><li><a href="#iced">Iced</a></li>
+  <li><a href="#daily">Specials</a></li><li><a href="#warm">Warm</a></li><li><a href="#fresh">Fresh</a></li><li><a href="#sweet">Sweet</a></li><li><a href="#coffee">Coffee</a></li><li><a href="#signature">Signature</a></li><li><a href="#iced">Iced</a></li>
 </ul></nav>
 <div class="sheet wrap">
+  {daily_html()}
   {band(MENU, ["Warm", "Fresh", "Sweet"])}
   {band(DRINKS, ["Coffee", "Signature", "Iced"])}
   <p class="extras">{E(EXTRAS)}</p>
@@ -464,7 +519,7 @@ def build_menu():
 (function(){var links=[].slice.call(document.querySelectorAll('#jump a'));if(!('IntersectionObserver' in window))return;
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id);});}});},{rootMargin:'-40% 0px -55% 0px'});
 links.forEach(function(a){var t=document.querySelector(a.getAttribute('href'));if(t)io.observe(t);});})();
-</script>
+</script><script>""" + STATUS_JS + """(function(){var n=eposNow();var li=document.querySelector('#daily li[data-i="'+n.mon+'"]');if(li){li.classList.add('today');var t=document.createElement('span');t.className='tg';t.textContent='Today';li.insertBefore(t,li.firstChild);}})();</script>
 </body>
 </html>
 """
@@ -484,13 +539,14 @@ def build_order(root="", fname="online-ordering.html"):
       <div class="ctas"><a class="btn solid" href="{root}menu.html">See the menu</a><a class="link ui" href="{MAPS}" target="_blank" rel="noopener">Directions →</a></div>
       <p class="note" id="spNote"></p>
     </div>
-    <figure class="card" style="margin:0"><img id="heroCard" src="{root}img/specials/monday.webp" alt="" width="720" height="900"></figure>
+    <figure class="card" style="margin:0"><img id="heroCard" alt="" width="720" height="900" fetchpriority="high"><noscript><img src="{root}img/specials/monday.webp" alt="Egg Monday special" width="720" height="900"></noscript></figure>
+    <script>{hero_js().replace('"img/specials/', '"' + root + 'img/specials/')}</script>
   </div>
 </section>
 </main>
 """ + footer(root) + bar("order", root) + f"""<script>{STATUS_JS}
-(function(){{var S={specials_json()};var n=eposStatus("status");var s=S[n.sp];var c=document.getElementById("heroCard");c.src="{root}img/specials/"+s.img+".webp";c.alt=s.name+": "+s.pair+", $"+s.price;
-document.getElementById("spNote").textContent=(n.tomorrow?"Tomorrow: ":"Today until 1 PM: ")+s.name+" — "+s.pair+", $"+s.price;}})();
+(function(){{var S={specials_json()};var n=eposStatus("status");var s=S[n.sp];
+document.getElementById("spNote").textContent=(n.tomorrow?"Tomorrow: ":"Today, "+s.win+": ")+s.name+" — "+s.pair+", $"+s.price;}})();
 </script>
 </body>
 </html>
@@ -499,6 +555,15 @@ document.getElementById("spNote").textContent=(n.tomorrow?"Tomorrow: ":"Today un
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "w").write(page)
 
+def build_404():
+    page = head("Page not found | EPŌS Coffee Bar", "", "", HOME_CSS, BUSINESS, noindex=True, root="/")
+    page += header("404", "/") + """<main><section class="hero"><div class="wrap">
+<h1><span class="kick">EPŌS Coffee Bar · 290 Gerrard St E</span><span class="t">This page has moved.</span></h1>
+<div class="ctas"><a class="btn solid" href="/">Home</a><a class="link ui" href="/menu.html">See the menu →</a></div>
+</div></section></main>
+""" + footer("/") + bar("404", "/") + "</body>\n</html>\n"
+    open(os.path.join(OUT, "404.html"), "w").write(page)
+
 def build_misc():
     open(os.path.join(OUT, "robots.txt"), "w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE}sitemap.xml\n")
     open(os.path.join(OUT, "sitemap.xml"), "w").write(
@@ -506,4 +571,4 @@ def build_misc():
         f'  <url><loc>{SITE}</loc></url>\n  <url><loc>{SITE}menu</loc></url>\n</urlset>\n')
 
 if __name__ == "__main__":
-    build_home(); build_menu(); build_order(); build_order(root="/", fname="online-ordering/index.html"); build_misc(); print("built")
+    build_home(); build_menu(); build_order(); build_order(root="/", fname="online-ordering/index.html"); build_misc(); build_404(); print("built")
