@@ -1,0 +1,509 @@
+#!/usr/bin/env python3
+"""EPŌS site generator v4 — index.html, menu.html, online-ordering.html (+ folder copy), sitemap, robots."""
+import html, json, os
+
+SITE = "https://eposbar.com/"          # confirm before launch
+ORDER_URL = ""                          # ordering provider link, when chosen
+OUT = os.path.dirname(os.path.abspath(__file__))
+E = html.escape
+MAPS = "https://www.google.com/maps/search/?api=1&amp;query=EPOS+Coffee+Bar+290+Gerrard+St+E+Toronto"
+IG = "https://www.instagram.com/epos.coffee/"
+
+HOURS = [("Monday", "08:00", "17:00"), ("Tuesday", "08:00", "17:00"), ("Wednesday", "08:00", "17:00"),
+         ("Thursday", "08:00", "17:00"), ("Friday", "08:00", "17:00"), ("Saturday", "09:00", "17:00"),
+         ("Sunday", "09:30", "17:00")]
+
+SPECIALS = [  # Mon..Sun: numeral, day, name, pairing, price, img, chapter line, start
+    ("I", "Monday", "Egg Monday", "EPŌS Scramble & Latte", 17, "monday", "Scramble on sourdough with gouda and onion jam. A latte, hot or iced.", "9:00"),
+    ("II", "Tuesday", "Bagel Tuesday", "Bagel & Americano", 14, "tuesday", "Any bagel sandwich from the kitchen. An Americano, hot or iced.", "9:00"),
+    ("III", "Wednesday", "Panini Wednesday", "Panini & Americano", 18, "wednesday", "A hot panini, pressed to order. An Americano, hot or iced.", "9:00"),
+    ("IV", "Thursday", "Quiche Thursday", "Quiche & Drip Coffee", 12, "thursday", "A slice of quiche baked here. Freshly brewed drip coffee.", "9:00"),
+    ("V", "Friday", "Croissant Friday", "Croissant & Latte", 21, "friday", "A croissant sandwich, built when you order. A latte, hot or iced.", "9:00"),
+    ("VI", "Saturday", "Brunch Saturday", "Shakshuka & Chai Latte", 18, "saturday", "Shakshuka in the pan, with a chai latte alongside.", "9:00"),
+    ("VII", "Sunday", "Sweet Sunday", "Sticky Toffee & Latte", 15, "sunday", "Warm sticky toffee with ice cream. A latte, hot or iced. From 9:30.", "9:30"),
+]
+
+MENU = {  # food: whole-dollar prices
+    "Warm": [
+        ("Soups", None, [("Borscht", "With a warm garlic bun", "11"), ("Creamy Mushroom Velouté", "With fresh bread", "9"),
+                         ("Chicken & Barley Comfort Bowl", "With fresh bread", "7")]),
+        ("Quiche", "Baked in-house", [("Classic Lorraine", "", "10"), ("Wild Mushroom & Thyme", "", "12"),
+                                      ("Spinach & Feta", "", "11"), ("Smoked Salmon", "", "13")]),
+        ("Eggs", None, [("Mediterranean Shakshuka", "Tomato, bell pepper, eggs, feta, cumin, coriander, turmeric, chili", "14"),
+                        ("EPŌS Scramble", "Sourdough, scramble, gouda, onion jam", "13")]),
+    ],
+    "Fresh": [
+        ("Sandwiches on Bagel", None, [("Smoked Salmon & Herb Bagel", "Smoked salmon, cream cheese, guac, capers, marinated onion, arugula", "14"),
+                                       ("Turkey & Gouda Bagel", "Turkey, gouda, arugula, guac, cream cheese", "13"),
+                                       ("Pesto & Roasted Veggie Bagel", "Bell pepper, eggplant, zucchini, sweet onion, arugula, pesto, cream cheese", "13")]),
+        ("Egg & Croissant", None, [("The EPŌS Egg Croissant", "Scrambled eggs, gouda, onion jam, arugula", "12"),
+                                   ("Bacon & Egg Croissant", "Scrambled eggs, gouda, smoked bacon, arugula", "13"),
+                                   ("Salmon & Guac Croissant", "Scrambled eggs, gouda, smoked salmon, guac, arugula", "16")]),
+        ("Hot Sandwiches", None, [("Turkey & Gouda", "Turkey, gouda, arugula, pesto, burger sauce", "14"),
+                                  ("Pastrami & Gouda Melt", "Pastrami, gouda, dill pickles, yellow mustard", "16"),
+                                  ("Mediterranean Veggie", "Bell pepper, eggplant, zucchini, sweet onion, arugula, feta, pesto", "14")]),
+    ],
+    "Sweet": [  # two-decimal prices
+        ("Croissant", None, [("Butter Croissant", "", "4.60"), ("Pistachio Croissant", "", "5.90"),
+                             ("Raspberry Croissant", "", "5.90"), ("Chocolate Croissant", "", "5.90")]),
+        ("Cakes", None, [("EPŌS Cake", "", "7.90"), ("Carrot Cake", "", "7.50"), ("Tiramisu", "", "7.00"), ("Mint Panna Cotta", "", "7.90")]),
+        ("Hot Desserts", None, [("Sticky Toffee", "Warm, with vanilla ice cream", "11.00"), ("Apple Crumble", "With ice cream", "12.00")]),
+    ],
+}
+DRINKS = {
+    "Coffee": [
+        ("Espresso", "Two prices: 12 oz / 16 oz", [("Espresso", "Single shot · 4 oz", "2.85"), ("Doppio", "Double shot · 4 oz", "3.60"),
+            ("Macchiato", "A dash of milk · 8 oz", "3.85"), ("Cappuccino", "Small / large", "4.65 / 5.90"), ("Flat White", "Silky milk, thin foam · 8 oz", "5.10"),
+            ("Americano", "", "3.85 / 4.35"), ("Latte", "", "6.25 / 7.35"), ("Mocha", "", "6.60 / 7.35")]),
+        ("Iced & Drip", None, [("Drip Coffee", "", "2.25 / 2.60"), ("Cold Brew", "", "4.00"), ("Iced Americano", "", "3.85 / 4.35"),
+            ("Iced Latte", "", "6.25 / 7.35"), ("Caramel", "Iced coffee & caramel syrup", "6.85 / 7.60")]),
+    ],
+    "Signature": [
+        ("Hot", None, [("London Fog", "Steamed milk, Earl Grey & vanilla", "5.75 / 6.50"), ("Chai Latte", "", "5.85 / 6.35"),
+            ("Hot Chocolate", "12 oz", "10.00"), ("Peppermint Mocha", "16 oz", "8.20"), ("Black Forest Mocha", "16 oz", "6.25"), ("Raf", "", "6.90 / 7.50")]),
+        ("Matcha & Tea", None, [("Matcha Latte", "", "5.75 / 6.50"), ("Iced Matcha Latte", "", "6.00 / 6.75"),
+            ("Blue Matcha Latte", "", "5.75 / 6.50"), ("Iced Tea", "", "2.60 / 3.10")]),
+    ],
+    "Iced": [
+        ("Iced", "All 16 oz", [("Espresso Tonic", "", "6.50"), ("Bumblebee", "", "6.50"), ("Ladybug", "", "6.50"),
+            ("Cookie Blast", "", "8.75"), ("Italian Soda", "", "4.95"), ("Mojito", "", "7.95")]),
+    ],
+}
+EXTRAS = "Extra espresso +1.50 · Extra syrup +0.95 · Oat, almond or soy milk +0.75"
+
+def nice(s):
+    h, m = map(int, s.split(":")); h12 = h - 12 if h > 12 else h
+    return f"{h12}:{m:02d}" if m else f"{h12}"
+
+def item_html(n, d, p):
+    return ('<li class="it"><span class="nm">%s</span><span class="ld" aria-hidden="true"></span><span class="pr">%s</span>%s</li>'
+            % (E(n), E(p), ('<span class="ds">%s</span>' % E(d)) if d else ""))
+
+def group_html(title, note, items):
+    return ('<div class="grp"><h3 class="sc"><span>%s</span></h3>%s<ul>%s</ul></div>'
+            % (E(title), ('<p class="gn">%s</p>' % E(note)) if note else "", "".join(item_html(*i) for i in items)))
+
+FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+         '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Cormorant+SC:wght@500;600'
+         '&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@500&display=swap" rel="stylesheet">')
+
+NOISE_INK = ("url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E"
+             "%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .055 0'/%3E"
+             "%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")")
+NOISE_PAPER = NOISE_INK.replace("0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .055 0", "0 0 0 0 .3  0 0 0 0 .25  0 0 0 0 .15  0 0 0 .06 0")
+
+CSS = r"""
+/* One system with the printed menu: slate ink, cream paper, gold hairlines; serif throughout, Jost only for tiny UI caps. */
+:root{
+  --ink:#1c2b28; --ink-deep:#141f1d; --paper:#f2ebdc; --paper-2:#e8dec9;
+  --gold:#c5a35e; --gold-paper:#7a5c26;
+  --head:#efe4c8; --body:#dcd4c2; --soft:#c9c2b0; --body-paper:#3a4541; --soft-paper:#5b615a;
+  --rule:rgba(197,163,94,.30); --rule-paper:rgba(122,92,38,.28);
+  --f-display:"Cormorant Garamond", Georgia, serif; --f-sc:"Cormorant SC", "Cormorant Garamond", Georgia, serif;
+  --f-body:"EB Garamond", Garamond, Georgia, serif; --f-ui:"Jost", "Futura", "Avenir Next", system-ui, sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:80px}
+html,body{overflow-x:clip}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--ink) NOISE_INK;color:var(--body);font:18px/1.6 var(--f-body);font-variant-numeric:lining-nums}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 40px}
+.ui{font:500 12px/1 var(--f-ui);letter-spacing:.14em;text-transform:uppercase}
+.sc{font-family:var(--f-sc);font-weight:500;letter-spacing:.08em}
+.label{font:600 15px/1.2 var(--f-sc);letter-spacing:.1em;color:var(--gold)}
+h1,h2,h3{margin:0;font-weight:500;text-wrap:balance}
+h2{font:500 clamp(36px,4.2vw,50px)/1.06 var(--f-display);color:var(--head)}
+.paper{background:var(--paper) NOISE_PAPER;color:var(--body-paper)}
+.paper-2{background:var(--paper-2) NOISE_PAPER;color:var(--body-paper)}
+.paper h2,.paper-2 h2{color:var(--ink)}
+.paper .label,.paper-2 .label{color:var(--gold-paper)}
+
+.rule{display:flex;align-items:center;gap:12px;color:var(--gold);width:260px}
+.rule::before,.rule::after{content:"";flex:1;height:1px;background:var(--gold)}
+.rule b{font:400 17px/1 var(--f-body);transform:translateY(1px)}
+.rule i{width:4px;height:4px;background:var(--gold);transform:rotate(45deg)}
+
+header{position:sticky;top:0;z-index:30;background:rgba(20,31,29,.95);backdrop-filter:blur(6px)}
+.nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:72px;padding:0 40px}
+.nav ul{display:flex;gap:32px;list-style:none;margin:0;padding:0}
+.nav ul a{text-decoration:none;color:var(--soft);padding:10px 0;background:linear-gradient(var(--gold),var(--gold)) 50% 100%/0 1px no-repeat;transition:background-size .25s,color .2s}
+.nav ul a:hover,.nav ul a[aria-current="page"]{color:var(--head);background-size:24px 1px}
+.brand{justify-self:center;display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand img{height:40px;width:auto}
+.brand span{font:500 21px/1 var(--f-display);letter-spacing:.16em;color:var(--head)}
+.nav .right{justify-self:end}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;text-decoration:none;border:1px solid var(--gold);color:var(--head);transition:background .2s,color .2s}
+.btn:hover{background:var(--gold);color:var(--ink-deep)}
+.btn.solid{background:var(--gold);color:var(--ink-deep);font:500 20px/1 var(--f-display);letter-spacing:0;text-transform:none;padding:0 26px;min-height:54px}
+.btn.solid:hover{background:#d8b973}
+.link{color:var(--head);text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:3px}
+.link:hover{color:var(--gold)}
+.paper .link,.paper-2 .link{color:var(--ink);border-color:var(--gold-paper)}
+
+.status{display:inline-flex;align-items:center;gap:10px;color:var(--body);font-size:18px}
+.status .dot{width:8px;height:8px;border-radius:50%;background:#8fae86;box-shadow:0 0 0 4px rgba(143,174,134,.18)}
+.status.closed .dot{background:transparent;border:1.5px solid #a9b3a6;box-shadow:none}
+
+.it{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:10px;padding:8px 0}
+.nm{font:500 19px/1.3 var(--f-body);color:var(--head)}
+.ld{border-bottom:1px dotted rgba(197,163,94,.5);transform:translateY(-5px)}
+.pr{font:500 18px/1 var(--f-body);color:var(--gold);white-space:nowrap;font-variant-numeric:lining-nums tabular-nums}
+.ds{grid-column:1 / -1;font:italic 400 16px/1.42 var(--f-body);color:var(--soft);max-width:44ch;margin-top:-2px}
+
+.bar{display:none}
+footer{background:var(--ink-deep);text-align:center;padding:64px 24px 72px}
+footer img{width:96px;margin:0 auto 18px}
+footer .tag{font:italic 500 22px/1.3 var(--f-display);color:var(--head);margin:0 0 16px}
+footer p{margin:6px 0;color:var(--soft);font-size:16px}
+footer nav{display:flex;justify-content:center;gap:26px;margin-top:18px;flex-wrap:wrap}
+footer nav a{color:var(--soft);text-decoration:none}
+footer nav a:hover{color:var(--head)}
+@media (max-width:760px){
+  .wrap{padding:0 22px}
+  .nav{grid-template-columns:1fr;height:60px;padding:0 20px}
+  .nav ul,.nav .right{display:none}
+  .brand img{height:34px}.brand span{font-size:19px}
+  .bar{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;z-index:35;background:rgba(20,31,29,.97);border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom)}
+  .bar a{display:flex;align-items:center;justify-content:center;height:60px;text-decoration:none;color:var(--soft)}
+  .bar a+a{border-left:1px solid var(--rule)}
+  .bar a[aria-current="page"]{color:var(--gold)}
+  body{padding-bottom:calc(60px + env(safe-area-inset-bottom) + 16px)}
+}
+""".replace("NOISE_INK", NOISE_INK).replace("NOISE_PAPER", NOISE_PAPER)
+
+HOME_CSS = r"""
+.hero{padding:72px 0 88px}
+.hero .grid{display:grid;grid-template-columns:7fr 5fr;gap:64px;align-items:center}
+.hero .kick{display:block;font:600 15px/1.3 var(--f-sc);letter-spacing:.12em;color:var(--gold);margin-bottom:22px}
+.hero h1 .t{display:block;font:500 clamp(42px,5.4vw,76px)/1.04 var(--f-display);color:var(--head);max-width:14ch}
+.hero .rule{margin:34px 0 26px}
+.hero .ctas{display:flex;align-items:center;gap:28px;margin-top:30px;flex-wrap:wrap}
+.hero .note{font:italic 400 17px/1.4 var(--f-body);color:var(--soft);margin:14px 0 0}
+.card{background:#f7f1e3;padding:6px;transform:rotate(-1.4deg);box-shadow:0 30px 50px -28px rgba(0,0,0,.75);max-width:420px;justify-self:end;width:100%}
+.card img{aspect-ratio:4/5;width:100%;object-fit:cover}
+.card figcaption{font:italic 400 15px/1.3 var(--f-body);color:#5b615a;text-align:center;padding:8px 0 4px}
+
+.specials{padding:104px 0}
+.specials .head{display:grid;grid-template-columns:5fr 7fr;gap:48px;align-items:end;margin-bottom:44px}
+.specials h2{max-width:15ch;margin-top:14px}
+.specials .lede{margin:0;max-width:46ch;color:var(--soft-paper)}
+.week{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,1fr);gap:16px}
+.week li{position:relative}
+.week img{width:100%;aspect-ratio:4/5;object-fit:cover;box-shadow:0 14px 24px -18px rgba(20,31,29,.6)}
+.week .rn{display:block;font:600 14px/1 var(--f-sc);letter-spacing:.08em;color:var(--gold-paper);margin:14px 0 6px}
+.week .wn{display:block;font:500 21px/1.15 var(--f-display);color:var(--ink)}
+.week .wp{font:500 17px/1 var(--f-body);color:var(--gold-paper);margin-left:6px}
+.week .ch{display:block;font:italic 400 15px/1.4 var(--f-body);color:var(--soft-paper);margin-top:6px}
+.week li.today img{outline:2px solid var(--gold-paper);outline-offset:4px}
+.week .tag{position:absolute;top:10px;left:10px;z-index:1;font:500 11px/1 var(--f-ui);letter-spacing:.14em;text-transform:uppercase;background:var(--ink);color:var(--paper);padding:5px 7px}
+
+.kitchen{padding:104px 0 96px}
+.kitchen .grid{display:grid;grid-template-columns:5fr 7fr;gap:56px;align-items:end}
+.kitchen h2{max-width:13ch}
+.kitchen p{max-width:40ch;margin:22px 0 28px;color:var(--soft-paper)}
+.shelf{border-bottom:1px solid var(--rule-paper)}
+.caps{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;margin-top:12px;font:italic 400 17px/1.3 var(--f-body);color:var(--soft-paper)}
+
+.visit{padding:104px 0 96px}
+.visit .grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
+.visit h2{font-size:clamp(40px,5vw,58px);margin:14px 0 16px}
+.visit .ctas{display:flex;gap:26px;align-items:center;flex-wrap:wrap;margin-top:28px}
+.hours{list-style:none;margin:0;padding:0;font-variant-numeric:lining-nums tabular-nums}
+.hours li{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--rule);color:var(--body)}
+.hours li.now{color:var(--head)}
+.hours li.now span:first-child::after{content:"Today";font:500 11px/1 var(--f-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-deep);background:var(--gold);padding:4px 6px;margin-left:12px;vertical-align:3px}
+.stamp{margin-top:32px;border:1px solid var(--rule);padding:20px 22px}
+.stamp h3{font:500 24px/1.2 var(--f-display);color:var(--head)}
+.stamp p{margin:6px 0 0;color:var(--soft);font-size:17px}
+
+@media (max-width:1000px){.week{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:900px){
+  .hero .grid,.specials .head,.kitchen .grid,.visit .grid{grid-template-columns:1fr;gap:36px}
+  .card{justify-self:center;max-width:320px}
+}
+@media (max-width:760px){
+  .hero{padding:36px 0 64px}
+  .hero .rule{margin:24px 0 18px}
+  .hero .ctas{flex-direction:column;align-items:stretch;gap:18px;margin-top:22px}
+  .hero .ctas .link{align-self:flex-start}
+  .specials,.kitchen,.visit{padding:72px 0}
+  .week{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:14px;padding-bottom:8px;margin-right:-22px}
+  .week li{flex:0 0 46%;scroll-snap-align:start}
+}
+"""
+
+MENU_CSS = r"""
+.mhead{padding-top:56px;padding-bottom:28px}
+.mhead h1{font:500 clamp(44px,5.6vw,68px)/1 var(--f-display);color:var(--head);margin-top:12px}
+.mhead p{color:var(--soft);margin:12px 0 0}
+.jump{position:sticky;top:72px;z-index:20;background:rgba(28,43,40,.97);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.jump ul{display:flex;gap:30px;list-style:none;margin:0 auto;padding:0 40px;max-width:1160px;overflow-x:auto;scrollbar-width:none}
+.jump ul::-webkit-scrollbar{display:none}
+.jump a{display:flex;align-items:center;height:50px;text-decoration:none;color:var(--soft);white-space:nowrap;border-bottom:1px solid transparent}
+.jump a:hover,.jump a.on{color:var(--head);border-bottom-color:var(--gold)}
+.sheet{padding-top:48px;padding-bottom:24px}
+.band{display:grid;grid-template-columns:repeat(3,1fr);gap:56px;padding:24px 0 48px}
+.colhead{margin-bottom:22px;padding-bottom:12px;border-bottom:1px solid var(--gold)}
+.colhead h2{font:500 32px/1 var(--f-sc);letter-spacing:.12em;color:var(--gold)}
+.grp{margin-bottom:34px}
+.grp h3{font-size:19px;color:var(--head);margin-bottom:4px}
+.grp .gn{font:italic 400 16px/1.4 var(--f-body);color:var(--soft);margin:0 0 4px}
+.grp ul{list-style:none;margin:0;padding:0}
+.extras{color:var(--soft);font-size:17px;margin:0 0 8px}
+.allergy{font-style:italic;color:var(--soft);font-size:16px;padding:8px 0 64px;margin:0}
+@media (max-width:900px){.band{grid-template-columns:1fr;gap:0}}
+@media (max-width:760px){.jump{top:60px;-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}.jump ul{padding:0 22px}.mhead{padding-top:36px}}
+"""
+
+STATUS_JS = r"""
+var EP_H=[["Sunday","09:30","17:00"],["Monday","08:00","17:00"],["Tuesday","08:00","17:00"],["Wednesday","08:00","17:00"],["Thursday","08:00","17:00"],["Friday","08:00","17:00"],["Saturday","09:00","17:00"]];
+function epMin(s){var p=s.split(":");return +p[0]*60+(+p[1])}
+function epNice(s){var x=epMin(s),h=Math.floor(x/60),k=x%60,h12=h>12?h-12:h;return h12+(k?":"+(k<10?"0":"")+k:"")+(h<12?" AM":" PM")}
+function eposNow(){var d,m;try{var o={};new Intl.DateTimeFormat("en-CA",{timeZone:"America/Toronto",weekday:"long",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).forEach(function(p){o[p.type]=p.value});d=EP_H.map(function(h){return h[0]}).indexOf(o.weekday);m=(+o.hour)*60+(+o.minute);}catch(e){var t=new Date();d=t.getDay();m=t.getHours()*60+t.getMinutes();}
+var t=EP_H[d],open=m>=epMin(t[1])&&m<epMin(t[2]),txt;
+if(open)txt="Open now · until "+epNice(t[2]);else if(m<epMin(t[1]))txt="Closed · opens today at "+epNice(t[1]);else txt="Closed · opens tomorrow at "+epNice(EP_H[(d+1)%7][1]);
+var useTomorrow=m>=13*60, mon=(d+6)%7, sp=useTomorrow?(mon+1)%7:mon;
+return {dow:d,mon:mon,open:open,text:txt,sp:sp,tomorrow:useTomorrow};}
+function eposStatus(id){var n=eposNow(),el=document.getElementById(id);if(!el)return n;el.classList.toggle("closed",!n.open);el.querySelector(".st").textContent=n.text;return n;}
+"""
+
+BUSINESS = {
+    "@context": "https://schema.org", "@type": "CafeOrCoffeeShop", "@id": SITE + "#cafe", "name": "EPŌS Coffee Bar",
+    "url": SITE, "image": SITE + "img/og.jpg", "priceRange": "$$", "hasMenu": SITE + "menu", "acceptsReservations": False,
+    "servesCuisine": ["Coffee", "Breakfast", "Bakery"], "sameAs": [IG],
+    "address": {"@type": "PostalAddress", "streetAddress": "290 Gerrard St E", "addressLocality": "Toronto", "addressRegion": "ON", "addressCountry": "CA"},
+    "openingHoursSpecification": [
+        {"@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "08:00", "closes": "17:00"},
+        {"@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "09:00", "closes": "17:00"},
+        {"@type": "OpeningHoursSpecification", "dayOfWeek": "Sunday", "opens": "09:30", "closes": "17:00"}],
+}
+
+def head(title, desc, path, extra_css, schema, noindex=False, root=""):
+    robots = '<meta name="robots" content="noindex">' if noindex else ""
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{E(title)}</title>
+<meta name="description" content="{E(desc)}">
+{robots}
+<link rel="canonical" href="{SITE}{path}">
+<meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}">
+<meta property="og:image" content="{SITE}img/og.jpg"><meta property="og:url" content="{SITE}{path}"><meta property="og:type" content="website">
+<meta name="theme-color" content="#141f1d">
+<link rel="icon" href="{root}img/favicon.png">
+{FONTS}
+<script type="application/ld+json">{json.dumps(schema, ensure_ascii=False)}</script>
+<style>{CSS}{extra_css}</style>
+</head>
+<body>
+"""
+
+def header(cur, root=""):
+    def a(href, label, key):
+        c = ' aria-current="page"' if cur == key else ""
+        return f'<li><a class="ui" href="{root}{href}"{c}>{label}</a></li>'
+    right = (f'<a class="btn ui" href="{ORDER_URL}" rel="noopener">Order for pickup</a>' if ORDER_URL
+             else f'<a class="btn ui" href="{MAPS}" target="_blank" rel="noopener">Directions</a>')
+    return f"""<header>
+  <div class="nav">
+    <nav aria-label="Main"><ul>{a("menu.html", "Menu", "menu")}{a("index.html#specials", "Specials", "specials")}{a("index.html#visit", "Visit", "visit")}</ul></nav>
+    <a class="brand" href="{root}index.html" aria-label="EPŌS Coffee Bar, home"><img src="{root}img/mark.webp" alt="" width="96" height="124"><span>EPŌS</span></a>
+    <div class="right">{right}</div>
+  </div>
+</header>
+"""
+
+def bar(cur, root=""):
+    m = ' aria-current="page"' if cur == "menu" else ""
+    mid = (f'<a href="{ORDER_URL}" rel="noopener">Order</a>' if ORDER_URL else f'<a href="{root}index.html#specials">Today</a>')
+    return f"""<nav class="bar ui" aria-label="Quick links">
+  <a href="{root}menu.html"{m}>Menu</a>{mid}<a href="{MAPS}" target="_blank" rel="noopener">Directions</a>
+</nav>
+"""
+
+def footer(root=""):
+    return f"""<footer>
+  <img src="{root}img/logo-sm.webp" alt="EPŌS Coffee Bar, established 2024" width="200" height="200" loading="lazy">
+  <p class="tag">Where every cup is a ritual, every bite a story.</p>
+  <p>290 Gerrard St E, Toronto · Mon–Fri 8–5 · Sat 9–5 · Sun 9:30–5</p>
+  <nav class="ui" aria-label="Footer"><a href="{root}menu.html">Menu</a><a href="{root}online-ordering.html">Order online</a><a href="{IG}" target="_blank" rel="noopener">Instagram</a><a href="{MAPS}" target="_blank" rel="noopener">Directions</a></nav>
+</footer>
+"""
+
+def specials_json():
+    return json.dumps([{"rn": s[0], "day": s[1], "name": s[2], "pair": s[3], "price": s[4], "img": s[5], "start": s[7]} for s in SPECIALS], ensure_ascii=False)
+
+def build_home():
+    week = "".join(
+        f'<li data-i="{i}"><img src="img/specials/{s[5]}-sm.webp" alt="{E(s[2])}: {E(s[3])}, ${s[4]}" width="300" height="375" loading="lazy">'
+        f'<span class="rn">{s[0]} · {s[1]}</span><span class="wn">{E(s[2])}<span class="wp">${s[4]}</span></span><span class="ch">{E(s[6])}</span></li>'
+        for i, s in enumerate(SPECIALS))
+    hours = "".join(f'<li data-d="{(i + 1) % 7}"><span>{d}</span><span>{nice(o)}–{nice(c)}</span></li>' for i, (d, o, c) in enumerate(HOURS))
+    page = head("EPŌS Coffee Bar | Coffee & Breakfast in Cabbagetown, Toronto",
+                "Coffee bar and kitchen at 290 Gerrard St E, Toronto. A different breakfast special with coffee every day until 1 PM. Borscht, quiche, croissant sandwiches and cakes.",
+                "", HOME_CSS, BUSINESS)
+    page += header("home") + f"""<main>
+<section class="hero">
+  <div class="wrap grid">
+    <div>
+      <h1><span class="kick">EPŌS Coffee Bar · Cabbagetown, Toronto</span><span class="t">Where every cup is a ritual, every bite a story.</span></h1>
+      <div class="rule" aria-hidden="true"><b>✱</b><i></i><b>✱</b></div>
+      <div class="status" id="status"><span class="dot"></span><span class="st">Mon–Fri 8–5 · Sat 9–5 · Sun 9:30–5</span></div>
+      <div class="ctas">
+        <a class="btn solid" href="#specials" id="spBtn">Today's special</a>
+        <a class="link ui" href="menu.html">Full menu →</a>
+      </div>
+      <p class="note" id="spNote"></p>
+    </div>
+    <figure class="card" style="margin:0"><img id="heroCard" src="img/specials/monday.webp" alt="" width="720" height="900"><figcaption id="heroCap"></figcaption></figure>
+  </div>
+</section>
+
+<section class="specials paper" id="specials" aria-labelledby="sp-h">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="label">Every day until 1 PM</div><h2 id="sp-h">A plate and a&nbsp;coffee. One price.</h2></div>
+      <p class="lede">Seven days, seven pairings, from Egg Monday to Sweet Sunday. Served from opening until 1 PM, while it lasts.</p>
+    </div>
+    <ol class="week" id="week">{week}</ol>
+  </div>
+</section>
+
+<section class="kitchen paper-2" aria-labelledby="k-h">
+  <div class="wrap grid">
+    <div>
+      <h2 id="k-h">Soup made here, a pot at a time.</h2>
+      <p>Borscht and velouté made in our own kitchen, a fresh pot every few days. Quiche four ways, baked here. Croissant sandwiches put together when you order.</p>
+      <a class="link ui" href="menu.html">Full menu →</a>
+    </div>
+    <div>
+      <div class="shelf"><img src="img/trio.webp" srcset="img/trio-sm.webp 750w, img/trio.webp 1500w" sizes="(max-width:900px) 92vw, 640px" alt="Borscht with a garlic bun, a salmon and guac croissant, and spinach and feta quiche" width="1500" height="420" loading="lazy"></div>
+      <div class="caps"><span>Borscht · 11</span><span>Salmon &amp; Guac Croissant · 16</span><span>Spinach &amp; Feta Quiche · 11</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="visit" id="visit" aria-labelledby="v-h">
+  <div class="wrap grid">
+    <div>
+      <div class="label">Visit</div>
+      <h2 id="v-h">290 Gerrard St E</h2>
+      <div class="status" id="status2"><span class="dot"></span><span class="st"></span></div>
+      <p style="margin:18px 0 0;max-width:38ch;color:var(--soft)">Stay for a cup or take it with you. Dine in &amp; takeaway.</p>
+      <div class="ctas">
+        <a class="btn ui" href="{MAPS}" target="_blank" rel="noopener">Get directions</a>
+        <a class="link ui" href="{IG}" target="_blank" rel="noopener">Follow @epos.coffee</a>
+      </div>
+      <div class="stamp"><h3>Your stamp card, in your wallet</h3><p>Add EPŌS to Apple or Google Wallet. Every coffee earns a stamp. Scan the code at the counter.</p></div>
+    </div>
+    <ul class="hours" id="hours" aria-label="Opening hours">{hours}</ul>
+  </div>
+</section>
+</main>
+""" + footer() + bar("home") + f"""<script>
+{STATUS_JS}
+(function(){{
+var S={specials_json()};
+var n=eposStatus("status");eposStatus("status2");
+document.querySelectorAll("#hours li").forEach(function(li){{if(+li.dataset.d===n.dow)li.classList.add("now");}});
+var s=S[n.sp], when=n.tomorrow?"Tomorrow":"Today";
+var card=document.getElementById("heroCard");card.src="img/specials/"+s.img+".webp";card.alt=s.name+": "+s.pair+", $"+s.price;
+document.getElementById("heroCap").textContent=s.rn+" · "+s.day+" · from "+(s.start==="9:30"?"9:30":"9")+" AM until 1 PM";
+document.getElementById("spBtn").textContent=when+": "+s.name+" — $"+s.price;
+document.getElementById("spNote").textContent=n.tomorrow?"Today's special has finished. Here's tomorrow's.":"Until 1 PM, coffee included.";
+var li=document.querySelector('#week li[data-i="'+n.sp+'"]');if(li){{li.classList.add("today");var t=document.createElement("span");t.className="tag";t.textContent=when;li.prepend(t);}}
+}})();
+</script>
+</body>
+</html>
+"""
+    open(os.path.join(OUT, "index.html"), "w").write(page)
+
+def build_menu():
+    def band(sections, cols):
+        out = '<div class="band">'
+        for col in cols:
+            out += f'<div id="{col.lower()}"><div class="colhead"><h2>{col}</h2></div>' + "".join(group_html(*g) for g in sections[col]) + "</div>"
+        return out + "</div>"
+    menu_schema = {"@context": "https://schema.org", "@type": "Menu", "name": "EPŌS Coffee Bar menu", "url": SITE + "menu", "hasMenuSection": []}
+    for col, groups in list(MENU.items()) + list(DRINKS.items()):
+        for g in groups:
+            sec = {"@type": "MenuSection", "name": g[0], "hasMenuItem": []}
+            for n_, d, p in g[2]:
+                it = {"@type": "MenuItem", "name": n_}
+                if d: it["description"] = d
+                it["offers"] = {"@type": "Offer", "price": p.split("/")[0].strip(), "priceCurrency": "CAD"}
+                sec["hasMenuItem"].append(it)
+            menu_schema["hasMenuSection"].append(sec)
+    page = head("Menu | EPŌS Coffee Bar, 290 Gerrard St E, Toronto",
+                "The EPŌS menu with prices: soups, quiche, eggs, bagel and croissant sandwiches, cakes, coffee, matcha and signature drinks.",
+                "menu", MENU_CSS, [BUSINESS, menu_schema])
+    page += header("menu") + f"""<main>
+<div class="mhead wrap">
+  <div class="label">EPŌS Coffee Bar · 290 Gerrard St E</div>
+  <h1>The Menu</h1>
+  <p>Daily specials <span style="white-space:nowrap">until 1 PM</span> · Dine in &amp; takeaway</p>
+</div>
+<nav class="jump ui" aria-label="Menu sections"><ul id="jump">
+  <li><a href="#warm">Warm</a></li><li><a href="#fresh">Fresh</a></li><li><a href="#sweet">Sweet</a></li><li><a href="#coffee">Coffee</a></li><li><a href="#signature">Signature</a></li><li><a href="#iced">Iced</a></li>
+</ul></nav>
+<div class="sheet wrap">
+  {band(MENU, ["Warm", "Fresh", "Sweet"])}
+  {band(DRINKS, ["Coffee", "Signature", "Iced"])}
+  <p class="extras">{E(EXTRAS)}</p>
+  <p class="allergy">Please tell us about any allergies. Our kitchen uses nuts, gluten, dairy and shellfish; trace amounts may be present.</p>
+</div>
+</main>
+""" + footer() + bar("menu") + """<script>
+(function(){var links=[].slice.call(document.querySelectorAll('#jump a'));if(!('IntersectionObserver' in window))return;
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id);});}});},{rootMargin:'-40% 0px -55% 0px'});
+links.forEach(function(a){var t=document.querySelector(a.getAttribute('href'));if(t)io.observe(t);});})();
+</script>
+</body>
+</html>
+"""
+    open(os.path.join(OUT, "menu.html"), "w").write(page)
+
+def build_order(root="", fname="online-ordering.html"):
+    page = head("Ordering | EPŌS Coffee Bar", "Order EPŌS at the counter, 290 Gerrard St E, Toronto.", "online-ordering",
+                HOME_CSS, BUSINESS, noindex=not ORDER_URL, root=root)
+    redirect = f'<script>location.replace("{ORDER_URL}");</script>' if ORDER_URL else ""
+    page += redirect + header("order", root) + f"""<main>
+<section class="hero">
+  <div class="wrap grid">
+    <div>
+      <h1><span class="kick">EPŌS Coffee Bar · 290 Gerrard St E</span><span class="t">Order at the counter.</span></h1>
+      <p style="max-width:44ch;margin:22px 0 0;color:var(--soft)">Ordering ahead is coming to this page. For now, order at the counter. The full menu is one tap away.</p>
+      <div class="status" id="status" style="margin-top:22px"><span class="dot"></span><span class="st"></span></div>
+      <div class="ctas"><a class="btn solid" href="{root}menu.html">See the menu</a><a class="link ui" href="{MAPS}" target="_blank" rel="noopener">Directions →</a></div>
+      <p class="note" id="spNote"></p>
+    </div>
+    <figure class="card" style="margin:0"><img id="heroCard" src="{root}img/specials/monday.webp" alt="" width="720" height="900"></figure>
+  </div>
+</section>
+</main>
+""" + footer(root) + bar("order", root) + f"""<script>{STATUS_JS}
+(function(){{var S={specials_json()};var n=eposStatus("status");var s=S[n.sp];var c=document.getElementById("heroCard");c.src="{root}img/specials/"+s.img+".webp";c.alt=s.name+": "+s.pair+", $"+s.price;
+document.getElementById("spNote").textContent=(n.tomorrow?"Tomorrow: ":"Today until 1 PM: ")+s.name+" — "+s.pair+", $"+s.price;}})();
+</script>
+</body>
+</html>
+"""
+    path = os.path.join(OUT, fname)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    open(path, "w").write(page)
+
+def build_misc():
+    open(os.path.join(OUT, "robots.txt"), "w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE}sitemap.xml\n")
+    open(os.path.join(OUT, "sitemap.xml"), "w").write(
+        '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f'  <url><loc>{SITE}</loc></url>\n  <url><loc>{SITE}menu</loc></url>\n</urlset>\n')
+
+if __name__ == "__main__":
+    build_home(); build_menu(); build_order(); build_order(root="/", fname="online-ordering/index.html"); build_misc(); print("built")

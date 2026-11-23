@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://eposbar.com/sitemap.xml
