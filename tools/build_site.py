@@ -387,7 +387,7 @@ def build_home():
   <div class="wrap grid">
     <div>
       <h1><span class="kick">EPŌS Coffee Bar · 290 Gerrard St E</span><span class="t">Cabbagetown’s hot kitchen.</span></h1>
-      <p class="tag">Breakfast &amp; lunch until 2. Coffee &amp; cake until 5.</p>
+      <p class="tag">Breakfast &amp; lunch until 2. Café open until 5.</p>
       <div class="rule" aria-hidden="true"><b>✱</b><i></i><b>✱</b></div>
       <div class="status" id="status"><span class="dot"></span><span class="st">Mon–Fri 8–5 · Sat 9–5 · Sun 9:30–5</span></div>
       <div class="ctas">
@@ -405,7 +405,7 @@ def build_home():
   <div class="wrap">
     <div class="head">
       <div><div class="label">Daily specials</div><h2 id="sp-h">One plate a day. One price.</h2></div>
-      <p class="lede">Seven days, seven specials, from Egg Monday to Sweet Sunday. Each costs less than ordering the same things separately. Tuesday to Thursday until 2 (soup from 11), then Coffee &amp; Cake until 5. Friday, Saturday and Monday until 1. Sunday pudding 12 to 5.</p>
+      <p class="lede">Seven days, seven specials, from Egg Monday to Sweet Sunday. Each costs less than ordering the same things separately. Served from opening until 1 PM, while it lasts. Tuesday to Thursday, Coffee &amp; Cake from 2 to 5.</p>
     </div>
     <div class="carousel">
       <ol class="week" id="week">{week}</ol>
