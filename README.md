@@ -1,2 +1,3 @@
-# epos-coffee
-EPOS Coffee Bar - Instagram media and website
+# EPŌS Coffee Bar
+
+Media for @epos.coffee Instagram posts (`ig/`) and, later, the eposbar.com website.
