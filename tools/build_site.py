@@ -301,7 +301,8 @@ BUSINESS = {
     "@context": "https://schema.org", "@type": "CafeOrCoffeeShop", "@id": SITE + "#cafe", "name": "EPŌS Coffee Bar",
     "url": SITE, "image": SITE + "img/og.jpg", "priceRange": "$$", "hasMenu": SITE + "menu", "acceptsReservations": False,
     "servesCuisine": ["Coffee", "Breakfast", "Bakery"], "sameAs": [IG],
-    "address": {"@type": "PostalAddress", "streetAddress": "290 Gerrard St E", "addressLocality": "Toronto", "addressRegion": "ON", "addressCountry": "CA"},
+    "address": {"@type": "PostalAddress", "streetAddress": "290 Gerrard St E", "addressLocality": "Toronto", "addressRegion": "ON", "postalCode": "M5A 2G4", "addressCountry": "CA"},
+    "telephone": "+1-437-913-9470",
     "openingHoursSpecification": [
         {"@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "08:00", "closes": "17:00"},
         {"@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "09:00", "closes": "17:00"},
@@ -357,7 +358,7 @@ def footer(root=""):
     return f"""<footer>
   <img src="{root}img/logo-sm.webp" alt="EPŌS Coffee Bar, established 2024" width="200" height="200" loading="lazy">
   <p class="tag">Where every cup is a ritual, every bite a story.</p>
-  <p>290 Gerrard St E, Toronto · Mon–Fri 8–5 · Sat 9–5 · Sun 9:30–5</p>
+  <p>290 Gerrard St E, Toronto, ON M5A 2G4 · <a href="tel:+14379139470" style="color:inherit">(437) 913-9470</a><br>Mon–Fri 8–5 · Sat 9–5 · Sun 9:30–5</p>
   <nav class="ui" aria-label="Footer"><a href="{root}menu.html">Menu</a><a href="{IG}" target="_blank" rel="noopener">Instagram</a><a href="{MAPS}" target="_blank" rel="noopener">Directions</a></nav>
 </footer>
 """
@@ -434,7 +435,7 @@ def build_home():
       <div class="label">Visit</div>
       <h2 id="v-h">290 Gerrard St E</h2>
       <div class="status" id="status2"><span class="dot"></span><span class="st"></span></div>
-      <p style="margin:18px 0 0;max-width:38ch;color:var(--soft)">Stay for a cup or take it with you. Dine in &amp; takeaway.</p>
+      <p style="margin:18px 0 0;max-width:38ch;color:var(--soft)">Toronto, ON M5A 2G4 · <a class="link" style="min-height:0" href="tel:+14379139470">(437) 913-9470</a><br>Stay for a cup or take it with you. Dine in &amp; takeaway.</p>
       <div class="ctas">
         <a class="btn ui" href="{MAPS}" target="_blank" rel="noopener">Get directions</a>
         <a class="link ui" href="{IG}" target="_blank" rel="noopener">Follow @epos.coffee</a>
