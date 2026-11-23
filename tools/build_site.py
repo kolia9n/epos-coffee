@@ -369,7 +369,7 @@ def specials_json():
 
 def hero_js():
     return (STATUS_JS + '(function(){var S=' + specials_json() + ';var n=eposNow(),s=S[n.sp],c=document.getElementById("heroCard");'
-            'c.src="img/specials/"+s.img+".webp?v=' + VER + '";c.alt=s.name+": "+s.pair+", $"+s.price;})();')
+            'var cc=(n.dow>=2&&n.dow<=4&&n.m>=840&&n.m<1020);c.src="img/specials/"+(cc?"coffee-cake":s.img)+".webp?v=' + VER + '";c.alt=s.name+": "+s.pair+", $"+s.price;})();')
 
 def build_home():
     week = "".join(
@@ -387,7 +387,7 @@ def build_home():
   <div class="wrap grid">
     <div>
       <h1><span class="kick">EPŌS Coffee Bar · 290 Gerrard St E</span><span class="t">Cabbagetown’s hot kitchen.</span></h1>
-      <p class="tag">Breakfast &amp; lunch until 5, coffee all day.</p>
+      <p class="tag">Breakfast &amp; lunch until 2. Coffee &amp; cake until 5.</p>
       <div class="rule" aria-hidden="true"><b>✱</b><i></i><b>✱</b></div>
       <div class="status" id="status"><span class="dot"></span><span class="st">Mon–Fri 8–5 · Sat 9–5 · Sun 9:30–5</span></div>
       <div class="ctas">
@@ -405,7 +405,7 @@ def build_home():
   <div class="wrap">
     <div class="head">
       <div><div class="label">Daily specials</div><h2 id="sp-h">One plate a day. One price.</h2></div>
-      <p class="lede">Seven days, seven specials, from Egg Monday to Sweet Sunday. Each costs less than ordering the same things separately. Tuesday to Thursday all day (soup from 11). Friday, Saturday and Monday until 1. Sunday pudding 12 to 5.</p>
+      <p class="lede">Seven days, seven specials, from Egg Monday to Sweet Sunday. Each costs less than ordering the same things separately. Tuesday to Thursday until 2 (soup from 11), then Coffee &amp; Cake until 5. Friday, Saturday and Monday until 1. Sunday pudding 12 to 5.</p>
     </div>
     <div class="carousel">
       <ol class="week" id="week">{week}</ol>
@@ -454,9 +454,10 @@ document.querySelectorAll("#hours li").forEach(function(li){{if(+li.dataset.d===
 var s=S[n.sp], when=n.tomorrow?"Tomorrow":"Today";
 document.getElementById("heroCap").textContent=s.day+" · "+s.win;
 var cc=(n.dow>=2&&n.dow<=4&&n.m>=14*60&&n.m<17*60);
-document.getElementById("spBtn").textContent=when+": "+s.name+" — $"+s.price;
-document.getElementById("spNote").textContent=cc?"Also now: Coffee & Cake, ${EXTRA["price"]}, until 5.":(n.tomorrow?"Today’s special has finished. Here’s tomorrow’s.":"Served "+s.win+", while it lasts.");
-if(cc){{var x=document.querySelector('#week li.xtra .tx');if(x){{var t2=document.createElement("span");t2.className="tag";t2.textContent="Now";x.insertBefore(t2,x.firstChild);}}}}
+document.getElementById("spBtn").textContent=cc?"Now: Coffee & Cake — ${EXTRA["price"]}":when+": "+s.name+" — $"+s.price;
+if(cc){{document.getElementById("spBtn").setAttribute("href","#cc");document.getElementById("heroCap").textContent="{EXTRA["days"]} · {window(EXTRA)}";}}
+document.getElementById("spNote").textContent=cc?"Any cake and a 12 oz latte, chai, matcha or London Fog, until 5. Tomorrow: "+s.name+".":(n.tomorrow?"Today’s special has finished. Here’s tomorrow’s.":"Served "+s.win+", while it lasts.");
+if(cc){{var x=document.querySelector('#week li.xtra .tx');x.parentNode.id="cc";if(x){{var t2=document.createElement("span");t2.className="tag";t2.textContent="Now";x.insertBefore(t2,x.firstChild);}}}}
 var li=document.querySelector('#week li[data-i="'+n.sp+'"]');if(li){{li.classList.add("today");li.id="today";var t=document.createElement("span");t.className="tag";t.textContent=when;var tx=li.querySelector(".tx");tx.insertBefore(t,tx.firstChild);}}
 setInterval(function(){{eposStatus("status");eposStatus("status2");}},60000);
 var w=document.getElementById("week"),pv=document.getElementById("cPrev"),nx=document.getElementById("cNext");

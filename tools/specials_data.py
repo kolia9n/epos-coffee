@@ -6,15 +6,15 @@ SPECIALS = [
          start="08:00", end="13:00", dishes=["EPŌS Scramble.png"], cups=["latte"], inc="",
          desc="Soft scramble on sourdough with gouda and onion jam, and a 12 oz latte, hot or iced.", img="monday"),
     dict(day="Tuesday", name="Shakshuka Tuesday", pair="Shakshuka, Bread & a Latte", price="17", save="SAVE UP TO $3",
-         start="08:00", end="17:00", dishes=["Mediterranean Shakshuka.png"], cups=["latte"], inc="LATTE OR CHAI LATTE",
-         desc="Our shakshuka with feta and bread, and a 12 oz latte or chai latte. All day.", img="tuesday"),
+         start="08:00", end="14:00", dishes=["Mediterranean Shakshuka.png"], cups=["latte"], inc="LATTE OR CHAI LATTE",
+         desc="Our shakshuka with feta and bread, and a 12 oz latte or chai latte. Until 2.", img="tuesday"),
     dict(day="Wednesday", name="Soup Wednesday", pair="Any Soup & a Hot Sandwich", price="18", save="SAVE UP TO $5",
-         start="11:00", end="17:00", dishes=["Turkey & Gouda .png", "Creamy Mushroom soup.PNG"], cups=[],
+         start="11:00", end="14:00", dishes=["Turkey & Gouda .png", "Creamy Mushroom soup.PNG"], cups=[],
          inc="BORSCHT OR PASTRAMI +$2",
-         desc="Mushroom velouté or chicken & barley, with a Turkey & Gouda or Mediterranean Veggie hot sandwich. Borscht or pastrami +$2. Lunch until 5.", img="wednesday"),
+         desc="Mushroom velouté or chicken & barley, with a Turkey & Gouda or Mediterranean Veggie hot sandwich. Borscht or pastrami +$2. Lunch, 11 to 2.", img="wednesday"),
     dict(day="Thursday", name="Croissant Thursday", pair="Egg Croissant & a Latte", price="16", save="SAVE $2",
-         start="08:00", end="17:00", dishes=["The EPŌS Egg Croissant.png"], cups=["latte"], inc="TWO FOR $30  ·  BACON +$1",
-         desc="The EPŌS Egg Croissant and a 12 oz latte. Bring a friend: two for $30. Bacon +$1. All day.", img="thursday"),
+         start="08:00", end="14:00", dishes=["The EPŌS Egg Croissant.png"], cups=["latte"], inc="TWO FOR $30  ·  BACON +$1",
+         desc="The EPŌS Egg Croissant and a 12 oz latte. Bring a friend: two for $30. Bacon +$1. Until 2.", img="thursday"),
     dict(day="Friday", name="Pastrami Friday", pair="Pastrami Melt & an Americano", price="17", save="SAVE $2",
          start="08:00", end="13:00", dishes=["Pastrami & Gouda Melt.png"], cups=["americano"], inc="",
          desc="Pastrami & Gouda Melt with dill pickles and mustard, pressed to order, and an Americano, hot or iced.", img="friday"),
@@ -29,7 +29,7 @@ EXTRA = dict(name="Coffee & Cake", days="Tue – Thu", pair="Any Cake & a 12 oz 
              start="14:00", end="17:00", inc="LATTE, CHAI, MATCHA OR LONDON FOG",
              cakes="EPŌS Cake  ·  Carrot Cake  ·  Tiramisu  ·  Mint Panna Cotta",
              desc="Any slice of cake with a 12 oz latte, chai, matcha or London Fog. Tuesday to Thursday, 2 to 5.")
-RULE = "Tue–Thu all day (soup from 11). Fri, Sat and Mon until 1. Sunday pudding 12–5."
+RULE = "Tue–Thu until 2 (soup from 11). Fri, Sat and Mon until 1. Sunday pudding 12–5. Coffee & Cake Tue–Thu 2–5."
 
 def nice(t):
     h, m = map(int, t.split(":")); ap = "AM" if h < 12 else "PM"; h12 = h - 12 if h > 12 else h
