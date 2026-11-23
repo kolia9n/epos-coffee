@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """EPŌS site generator v4 — index.html, menu.html, online-ordering.html (+ folder copy), sitemap, robots."""
-import html, json, os
+import html, json, os, time
+VER = time.strftime("%Y%m%d%H%M")
 
 SITE = "https://eposbar.com/"          # confirm before launch
 ORDER_URL = ""                          # ordering provider link, when chosen
@@ -72,14 +73,14 @@ def nice(s):
 def fp(p):
     return " / ".join(x.strip()[:-3] if x.strip().endswith(".00") else x.strip() for x in p.split("/"))
 
-def item_html(n, d, p):
-    p = fp(p)
+def item_html(n, d, p, keep=False):
+    p = p if keep else fp(p)
     return ('<li class="it"><span class="nm">%s</span><span class="ld" aria-hidden="true"></span><span class="pr">%s</span>%s</li>'
             % (E(n), E(p), ('<span class="ds">%s</span>' % E(d)) if d else ""))
 
 def group_html(title, note, items):
     return ('<div class="grp"><h3 class="sc"><span>%s</span></h3>%s<ul>%s</ul></div>'
-            % (E(title), ('<p class="gn">%s</p>' % E(note)) if note else "", "".join(item_html(*i) for i in items)))
+            % (E(title), ('<p class="gn">%s</p>' % E(note)) if note else "", "".join(item_html(*i, keep=any(not x.strip().endswith(".00") and "." in x for it in items for x in it[2].split("/"))) for i in items)))
 
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
          '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Cormorant+SC:wght@500;600'
@@ -128,7 +129,7 @@ h2{font:500 clamp(36px,4.2vw,50px)/1.06 var(--f-display);color:var(--head)}
 header{position:sticky;top:0;z-index:30;background:rgba(20,31,29,.97)}
 .nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:72px;padding:0 40px}
 .nav ul{display:flex;gap:32px;list-style:none;margin:0;padding:0}
-.nav ul a{text-decoration:none;color:var(--soft);padding:10px 0;background:linear-gradient(var(--gold),var(--gold)) 50% 100%/0 1px no-repeat;transition:background-size .25s,color .2s}
+.nav ul a{text-decoration:none;color:var(--soft);display:inline-block;padding:14px 0;background:linear-gradient(var(--gold),var(--gold)) 50% 100%/0 1px no-repeat;transition:background-size .25s,color .2s}
 .nav ul a:hover,.nav ul a[aria-current="page"]{color:var(--head);background-size:24px 1px}
 .brand{justify-self:center;display:flex;align-items:center;gap:12px;text-decoration:none}
 .brand img{height:40px;width:auto}
@@ -158,7 +159,7 @@ footer img{width:96px;margin:0 auto 18px}
 footer .tag{font:italic 500 22px/1.3 var(--f-display);color:var(--head);margin:0 0 16px}
 footer p{margin:6px 0;color:var(--soft);font-size:16px}
 footer nav{display:flex;justify-content:center;gap:26px;margin-top:18px;flex-wrap:wrap}
-footer nav a{color:var(--soft);text-decoration:none;padding:14px 6px}
+footer nav a{color:var(--soft);text-decoration:none;padding:16px 8px;display:inline-block}
 footer nav a:hover{color:var(--head)}
 @media (max-width:760px){
   .wrap{padding:0 22px}
@@ -198,8 +199,8 @@ HOME_CSS = r"""
 .week .wp{font:500 17px/1 var(--f-body);color:var(--gold-paper);margin-left:6px}
 .week .ch{display:block;font:italic 400 15px/1.4 var(--f-body);color:var(--soft-paper);margin-top:6px}
 .week li.today img{outline:2px solid var(--gold-paper);outline-offset:3px}
-.week li.xtra{border:1px solid var(--gold-paper);padding:26px 22px;align-self:start}
-.week li.xtra .rn{margin-top:0}
+@media (min-width:761px){.week li{position:relative}.week .tag{position:absolute;top:8px;left:8px;margin:0;z-index:1}}
+
 .cnav{display:none;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
 .cbtn{width:48px;height:48px;border-radius:50%;border:1px solid var(--gold-paper);background:transparent;color:var(--ink);font:400 22px/1 var(--f-body);cursor:pointer}
 .cbtn:disabled{opacity:.3}
@@ -241,7 +242,6 @@ HOME_CSS = r"""
   .week{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;padding:6px 22px 10px;margin:0 -22px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .week::-webkit-scrollbar{display:none}
   .week li{flex:0 0 74%;scroll-snap-align:center}
-  .week li.xtra{flex-basis:64%;align-self:center}
   .cnav{display:flex}
 
 }
@@ -333,12 +333,12 @@ def head(title, desc, path, extra_css, schema, noindex=False, root=""):
 def header(cur, root=""):
     def a(href, label, key):
         c = ' aria-current="page"' if cur == key else ""
-        return f'<li><a class="ui" href="{root}{href}"{c}>{label}</a></li>'
+        return f'<li><a class="ui" href="{"" if href.startswith("#") else root}{href}"{c}>{label}</a></li>'
     right = (f'<a class="btn ui" href="{ORDER_URL}" rel="noopener">Order for pickup</a>' if ORDER_URL
              else f'<a class="btn ui" href="{MAPS}" target="_blank" rel="noopener">Directions</a>')
     return f"""<header>
   <div class="nav">
-    <nav aria-label="Main"><ul>{a("menu.html", "Menu", "menu")}{a("index.html#specials", "Specials", "specials")}{a("index.html#visit", "Visit", "visit")}</ul></nav>
+    <nav aria-label="Main"><ul>{a("menu.html", "Menu", "menu")}{a("#daily" if cur == "menu" else "index.html#specials", "Specials", "specials")}{a("index.html#visit", "Visit", "visit")}</ul></nav>
     <a class="brand" href="{root}index.html" aria-label="EPŌS Coffee Bar, home"><img src="{root}img/mark.webp" alt="" width="96" height="124"><span>EPŌS</span></a>
     <div class="right">{right}</div>
   </div>
@@ -347,7 +347,7 @@ def header(cur, root=""):
 
 def bar(cur, root=""):
     m = ' aria-current="page"' if cur == "menu" else ""
-    mid = (f'<a href="{ORDER_URL}" rel="noopener">Order</a>' if ORDER_URL else (f'<a href="#daily">Today</a>' if cur == "menu" else f'<a href="{root}index.html#specials">Today</a>'))
+    mid = (f'<a href="{ORDER_URL}" rel="noopener">Order</a>' if ORDER_URL else (f'<a href="#today">Today</a>' if cur == "home" else (f'<a href="#daily">Today</a>' if cur == "menu" else f'<a href="{root}index.html#today">Today</a>')))
     return f"""<nav class="bar ui" aria-label="Quick links">
   <a href="{root}menu.html"{m}>Menu</a>{mid}<a href="{MAPS}" target="_blank" rel="noopener">Directions</a>
 </nav>
@@ -369,20 +369,20 @@ def specials_json():
 
 def hero_js():
     return (STATUS_JS + '(function(){var S=' + specials_json() + ';var n=eposNow(),s=S[n.sp],c=document.getElementById("heroCard");'
-            'c.src="img/specials/"+s.img+".webp";c.alt=s.name+": "+s.pair+", $"+s.price;})();')
+            'c.src="img/specials/"+s.img+".webp?v=' + VER + '";c.alt=s.name+": "+s.pair+", $"+s.price;})();')
 
 def build_home():
     week = "".join(
-        f'<li data-i="{i}"><picture><img src="img/specials/{s["img"]}-sm.webp" srcset="img/specials/{s["img"]}-sm.webp 300w, img/specials/{s["img"]}.webp 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="{E(s["name"])}: {E(s["pair"])}, ${s["price"]}" width="300" height="375" loading="lazy"></picture>'
+        f'<li data-i="{i}"><picture><img src="img/specials/{s["img"]}-sm.webp?v={VER}" srcset="img/specials/{s["img"]}-sm.webp?v={VER} 300w, img/specials/{s["img"]}.webp?v={VER} 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="{E(s["name"])}: {E(s["pair"])}, ${s["price"]}" width="300" height="375" loading="lazy"></picture>'
         f'<div class="tx"><span class="rn">{s["day"]} · {window(s)}</span><span class="wn">{E(s["name"])}<span class="wp">${s["price"]}</span></span><span class="ch">{E(s["desc"])}</span></div></li>'
         for i, s in enumerate(SPECIALS))
-    week += (f'<li class="xtra"><div class="tx"><span class="rn">{EXTRA["days"]} · {window(EXTRA)}</span><span class="wn">{E(EXTRA["name"])}'
+    week += (f'<li class="xtra" data-x="1"><picture><img src="img/specials/coffee-cake-sm.webp?v={VER}" srcset="img/specials/coffee-cake-sm.webp?v={VER} 300w, img/specials/coffee-cake.webp?v={VER} 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Coffee &amp; Cake, Tuesday to Thursday 2 to 5 PM, ${EXTRA["price"]}" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">{EXTRA["days"]} · {window(EXTRA)}</span><span class="wn">{E(EXTRA["name"])}'
              f'<span class="wp">${EXTRA["price"]}</span></span><span class="ch">{E(EXTRA["desc"])}</span></div></li>')
     hours = "".join(f'<li data-d="{(i + 1) % 7}"><span>{d}</span><span>{nice(o)}–{nice(c)}</span></li>' for i, (d, o, c) in enumerate(HOURS))
     page = head("EPŌS Coffee Bar | Coffee & Breakfast in Cabbagetown, Toronto",
                 "Coffee bar and kitchen at 290 Gerrard St E, Toronto. A different daily special every day of the week. Borscht, quiche, croissant sandwiches and cakes.",
                 "", HOME_CSS, BUSINESS)
-    page += header("home") + f"""<main>
+    page += header("home") + f"""<main id="top">
 <section class="hero">
   <div class="wrap grid">
     <div>
@@ -391,12 +391,12 @@ def build_home():
       <div class="rule" aria-hidden="true"><b>✱</b><i></i><b>✱</b></div>
       <div class="status" id="status"><span class="dot"></span><span class="st">Mon–Fri 8–5 · Sat 9–5 · Sun 9:30–5</span></div>
       <div class="ctas">
-        <a class="btn solid" href="#specials" id="spBtn">Today's special</a>
+        <a class="btn solid" href="#today" id="spBtn">Today’s special</a>
         <a class="link ui" href="menu.html">Full menu →</a>
       </div>
       <p class="note" id="spNote"></p>
     </div>
-    <figure class="card" style="margin:0"><img id="heroCard" alt="" width="720" height="900" fetchpriority="high"><noscript><img src="img/specials/monday.webp" alt="Egg Monday special" width="720" height="900"></noscript><figcaption id="heroCap"></figcaption></figure>
+    <figure class="card" style="margin:0"><img id="heroCard" alt="" width="720" height="900" fetchpriority="high"><noscript><img src="img/specials/monday.webp?v={VER}" alt="Egg Monday special" width="720" height="900"></noscript><figcaption id="heroCap"></figcaption></figure>
     <script>{hero_js()}</script>
   </div>
 </section>
@@ -405,11 +405,11 @@ def build_home():
   <div class="wrap">
     <div class="head">
       <div><div class="label">Daily specials</div><h2 id="sp-h">One plate a day. One price.</h2></div>
-      <p class="lede">Seven days, seven specials, from Egg Monday to Sweet Sunday. Each costs less than ordering the same things separately. Tuesday to Thursday all day, Friday to Monday until 1, Sunday pudding from noon.</p>
+      <p class="lede">Seven days, seven specials, from Egg Monday to Sweet Sunday. Each costs less than ordering the same things separately. Tuesday to Thursday all day (soup from 11). Friday, Saturday and Monday until 1. Sunday pudding 12 to 5.</p>
     </div>
     <div class="carousel">
       <ol class="week" id="week">{week}</ol>
-      <div class="cnav ui" aria-hidden="true"><button type="button" class="cbtn" id="cPrev" aria-label="Previous special">&#8592;</button><span class="chint">Swipe for the week</span><button type="button" class="cbtn" id="cNext" aria-label="Next special">&#8594;</button></div>
+      <div class="cnav ui"><button type="button" class="cbtn" id="cPrev" aria-label="Previous special">&#8592;</button><span class="chint">Swipe for the week</span><button type="button" class="cbtn" id="cNext" aria-label="Next special">&#8594;</button></div>
     </div>
   </div>
 </section>
@@ -454,9 +454,10 @@ document.querySelectorAll("#hours li").forEach(function(li){{if(+li.dataset.d===
 var s=S[n.sp], when=n.tomorrow?"Tomorrow":"Today";
 document.getElementById("heroCap").textContent=s.day+" · "+s.win;
 var cc=(n.dow>=2&&n.dow<=4&&n.m>=14*60&&n.m<17*60);
-document.getElementById("spBtn").textContent=cc?"Now: Coffee & Cake — ${EXTRA["price"]}":when+": "+s.name+" — $"+s.price;
-document.getElementById("spNote").textContent=cc?"Any cake and a 12 oz latte, chai, matcha or London Fog, until 5.":(n.tomorrow?"Today's special has finished. Here's tomorrow's.":"Served "+s.win+", while it lasts.");
-var li=document.querySelector('#week li[data-i="'+n.sp+'"]');if(li){{li.classList.add("today");var t=document.createElement("span");t.className="tag";t.textContent=when;var tx=li.querySelector(".tx");tx.insertBefore(t,tx.firstChild);}}
+document.getElementById("spBtn").textContent=when+": "+s.name+" — $"+s.price;
+document.getElementById("spNote").textContent=cc?"Also now: Coffee & Cake, ${EXTRA["price"]}, until 5.":(n.tomorrow?"Today’s special has finished. Here’s tomorrow’s.":"Served "+s.win+", while it lasts.");
+if(cc){{var x=document.querySelector('#week li.xtra .tx');if(x){{var t2=document.createElement("span");t2.className="tag";t2.textContent="Now";x.insertBefore(t2,x.firstChild);}}}}
+var li=document.querySelector('#week li[data-i="'+n.sp+'"]');if(li){{li.classList.add("today");li.id="today";var t=document.createElement("span");t.className="tag";t.textContent=when;var tx=li.querySelector(".tx");tx.insertBefore(t,tx.firstChild);}}
 setInterval(function(){{eposStatus("status");eposStatus("status2");}},60000);
 var w=document.getElementById("week"),pv=document.getElementById("cPrev"),nx=document.getElementById("cNext");
 function step(){{var a=w.children[0],b=w.children[1];return b.offsetLeft-a.offsetLeft;}}
@@ -474,7 +475,7 @@ if(li&&getComputedStyle(w).display==="flex"){{w.scrollLeft=li.offsetLeft-(w.clie
 def daily_html():
     rows = "".join(f'<li data-i="{i}"><span class="dd">{s["day"]} · {window(s)}</span><span class="pr">${s["price"]}</span>'
                    f'<span class="nm">{E(s["name"])}</span><span class="ds">{E(s["desc"])}</span></li>' for i, s in enumerate(SPECIALS))
-    rows += (f'<li><span class="dd">{EXTRA["days"]} · {window(EXTRA)}</span><span class="pr">${EXTRA["price"]}</span>'
+    rows += (f'<li data-x="1"><span class="dd">{EXTRA["days"]} · {window(EXTRA)}</span><span class="pr">${EXTRA["price"]}</span>'
              f'<span class="nm">{E(EXTRA["name"])}</span><span class="ds">{E(EXTRA["desc"])}</span></li>')
     return (f'<section class="daily" id="daily"><div class="colhead"><h2>Daily Specials</h2><p>Each one costs less than ordering separately.</p></div>'
             f'<ul>{rows}</ul></section>')
@@ -516,10 +517,15 @@ def build_menu():
 </div>
 </main>
 """ + footer() + bar("menu") + """<script>
-(function(){var links=[].slice.call(document.querySelectorAll('#jump a'));if(!('IntersectionObserver' in window))return;
-var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id);});}});},{rootMargin:'-40% 0px -55% 0px'});
-links.forEach(function(a){var t=document.querySelector(a.getAttribute('href'));if(t)io.observe(t);});})();
-</script><script>""" + STATUS_JS + """(function(){var n=eposNow();var li=document.querySelector('#daily li[data-i="'+n.mon+'"]');if(li){li.classList.add('today');var t=document.createElement('span');t.className='tg';t.textContent='Today';li.insertBefore(t,li.firstChild);}})();</script>
+(function(){var links=[].slice.call(document.querySelectorAll('#jump a')),ul=document.getElementById('jump'),lock=0;
+var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'));});
+function on(i){links.forEach(function(a,j){a.classList.toggle('on',j===i);});var a=links[i];if(a&&ul.scrollWidth>ul.clientWidth)ul.scrollTo({left:a.offsetLeft-22,behavior:'smooth'});}
+links.forEach(function(a,i){a.addEventListener('click',function(){lock=Date.now();on(i);});});
+var cur=-1;function pick(){if(Date.now()-lock<900)return;var best=0,bt=-1e9;secs.forEach(function(s,i){if(!s)return;var t=s.getBoundingClientRect().top;if(t<=150&&t>bt+1){bt=t;best=i;}});if(best!==cur){cur=best;on(best);}}
+window.addEventListener('scroll',pick,{passive:true});pick();})();
+</script><script>""" + STATUS_JS + """(function(){var n=eposNow();function tag(el,txt){el.classList.add('today');var t=document.createElement('span');t.className='tg';t.textContent=txt;el.insertBefore(t,el.firstChild);}
+var li=document.querySelector('#daily li[data-i="'+n.sp+'"]');if(li)tag(li,n.tomorrow?'Tomorrow':'Today');
+if(n.dow>=2&&n.dow<=4&&n.m>=840&&n.m<1020){var x=document.querySelector('#daily li[data-x]');if(x)tag(x,'Now');}})();</script>
 </body>
 </html>
 """
@@ -539,14 +545,14 @@ def build_order(root="", fname="online-ordering.html"):
       <div class="ctas"><a class="btn solid" href="{root}menu.html">See the menu</a><a class="link ui" href="{MAPS}" target="_blank" rel="noopener">Directions →</a></div>
       <p class="note" id="spNote"></p>
     </div>
-    <figure class="card" style="margin:0"><img id="heroCard" alt="" width="720" height="900" fetchpriority="high"><noscript><img src="{root}img/specials/monday.webp" alt="Egg Monday special" width="720" height="900"></noscript></figure>
+    <figure class="card" style="margin:0"><img id="heroCard" alt="" width="720" height="900" fetchpriority="high"><noscript><img src="{root}img/specials/monday.webp?v={VER}" alt="Egg Monday special" width="720" height="900"></noscript></figure>
     <script>{hero_js().replace('"img/specials/', '"' + root + 'img/specials/')}</script>
   </div>
 </section>
 </main>
 """ + footer(root) + bar("order", root) + f"""<script>{STATUS_JS}
 (function(){{var S={specials_json()};var n=eposStatus("status");var s=S[n.sp];
-document.getElementById("spNote").textContent=(n.tomorrow?"Tomorrow: ":"Today, "+s.win+": ")+s.name+" — "+s.pair+", $"+s.price;}})();
+document.getElementById("spNote").textContent=(n.tomorrow?"Tomorrow: ":"Today, "+s.win+": ")+s.name+" — "+s.pair+", $"+s.price+((n.dow>=2&&n.dow<=4&&n.m>=840&&n.m<1020)?". Also now: Coffee & Cake, ${EXTRA["price"]}, until 5.":"");}})();
 </script>
 </body>
 </html>
@@ -558,7 +564,7 @@ document.getElementById("spNote").textContent=(n.tomorrow?"Tomorrow: ":"Today, "
 def build_404():
     page = head("Page not found | EPŌS Coffee Bar", "", "", HOME_CSS, BUSINESS, noindex=True, root="/")
     page += header("404", "/") + """<main><section class="hero"><div class="wrap">
-<h1><span class="kick">EPŌS Coffee Bar · 290 Gerrard St E</span><span class="t">This page has moved.</span></h1>
+<h1><span class="kick">EPŌS Coffee Bar · 290 Gerrard St E</span><span class="t">We can’t find that page.</span></h1>
 <div class="ctas"><a class="btn solid" href="/">Home</a><a class="link ui" href="/menu.html">See the menu →</a></div>
 </div></section></main>
 """ + footer("/") + bar("404", "/") + "</body>\n</html>\n"

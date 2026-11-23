@@ -51,7 +51,7 @@ h2{font:500 clamp(36px,4.2vw,50px)/1.06 var(--f-display);color:var(--head)}
 header{position:sticky;top:0;z-index:30;background:rgba(20,31,29,.97)}
 .nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:72px;padding:0 40px}
 .nav ul{display:flex;gap:32px;list-style:none;margin:0;padding:0}
-.nav ul a{text-decoration:none;color:var(--soft);padding:10px 0;background:linear-gradient(var(--gold),var(--gold)) 50% 100%/0 1px no-repeat;transition:background-size .25s,color .2s}
+.nav ul a{text-decoration:none;color:var(--soft);display:inline-block;padding:14px 0;background:linear-gradient(var(--gold),var(--gold)) 50% 100%/0 1px no-repeat;transition:background-size .25s,color .2s}
 .nav ul a:hover,.nav ul a[aria-current="page"]{color:var(--head);background-size:24px 1px}
 .brand{justify-self:center;display:flex;align-items:center;gap:12px;text-decoration:none}
 .brand img{height:40px;width:auto}
@@ -81,7 +81,7 @@ footer img{width:96px;margin:0 auto 18px}
 footer .tag{font:italic 500 22px/1.3 var(--f-display);color:var(--head);margin:0 0 16px}
 footer p{margin:6px 0;color:var(--soft);font-size:16px}
 footer nav{display:flex;justify-content:center;gap:26px;margin-top:18px;flex-wrap:wrap}
-footer nav a{color:var(--soft);text-decoration:none;padding:14px 6px}
+footer nav a{color:var(--soft);text-decoration:none;padding:16px 8px;display:inline-block}
 footer nav a:hover{color:var(--head)}
 @media (max-width:760px){
   .wrap{padding:0 22px}
@@ -119,8 +119,8 @@ footer nav a:hover{color:var(--head)}
 .week .wp{font:500 17px/1 var(--f-body);color:var(--gold-paper);margin-left:6px}
 .week .ch{display:block;font:italic 400 15px/1.4 var(--f-body);color:var(--soft-paper);margin-top:6px}
 .week li.today img{outline:2px solid var(--gold-paper);outline-offset:3px}
-.week li.xtra{border:1px solid var(--gold-paper);padding:26px 22px;align-self:start}
-.week li.xtra .rn{margin-top:0}
+@media (min-width:761px){.week li{position:relative}.week .tag{position:absolute;top:8px;left:8px;margin:0;z-index:1}}
+
 .cnav{display:none;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
 .cbtn{width:48px;height:48px;border-radius:50%;border:1px solid var(--gold-paper);background:transparent;color:var(--ink);font:400 22px/1 var(--f-body);cursor:pointer}
 .cbtn:disabled{opacity:.3}
@@ -162,7 +162,6 @@ footer nav a:hover{color:var(--head)}
   .week{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;padding:6px 22px 10px;margin:0 -22px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .week::-webkit-scrollbar{display:none}
   .week li{flex:0 0 74%;scroll-snap-align:center}
-  .week li.xtra{flex-basis:64%;align-self:center}
   .cnav{display:flex}
 
 }
@@ -176,7 +175,7 @@ footer nav a:hover{color:var(--head)}
     <div class="right"><a class="btn ui" href="https://www.google.com/maps/search/?api=1&amp;query=EPOS+Coffee+Bar+290+Gerrard+St+E+Toronto" target="_blank" rel="noopener">Directions</a></div>
   </div>
 </header>
-<main>
+<main id="top">
 <section class="hero">
   <div class="wrap grid">
     <div>
@@ -185,12 +184,12 @@ footer nav a:hover{color:var(--head)}
       <div class="rule" aria-hidden="true"><b>✱</b><i></i><b>✱</b></div>
       <div class="status" id="status"><span class="dot"></span><span class="st">Mon–Fri 8–5 · Sat 9–5 · Sun 9:30–5</span></div>
       <div class="ctas">
-        <a class="btn solid" href="#specials" id="spBtn">Today's special</a>
+        <a class="btn solid" href="#today" id="spBtn">Today’s special</a>
         <a class="link ui" href="menu.html">Full menu →</a>
       </div>
       <p class="note" id="spNote"></p>
     </div>
-    <figure class="card" style="margin:0"><img id="heroCard" alt="" width="720" height="900" fetchpriority="high"><noscript><img src="img/specials/monday.webp" alt="Egg Monday special" width="720" height="900"></noscript><figcaption id="heroCap"></figcaption></figure>
+    <figure class="card" style="margin:0"><img id="heroCard" alt="" width="720" height="900" fetchpriority="high"><noscript><img src="img/specials/monday.webp?v=202611230208" alt="Egg Monday special" width="720" height="900"></noscript><figcaption id="heroCap"></figcaption></figure>
     <script>
 var EP_END=["13:00", "17:00", "17:00", "17:00", "13:00", "13:00", "17:00"];
 var EP_H=[["Sunday","09:30","17:00"],["Monday","08:00","17:00"],["Tuesday","08:00","17:00"],["Wednesday","08:00","17:00"],["Thursday","08:00","17:00"],["Friday","08:00","17:00"],["Saturday","09:00","17:00"]];
@@ -202,7 +201,7 @@ if(open)txt="Open now · until "+epNice(t[2]);else if(m<epMin(t[1]))txt="Closed 
 var mon=(d+6)%7, endM=(typeof EP_END!=="undefined")?epMin(EP_END[mon]):13*60, useTomorrow=m>=endM, sp=useTomorrow?(mon+1)%7:mon;
 return {dow:d,mon:mon,m:m,open:open,text:txt,sp:sp,tomorrow:useTomorrow};}
 function eposStatus(id){var n=eposNow(),el=document.getElementById(id);if(!el)return n;el.classList.toggle("closed",!n.open);el.querySelector(".st").textContent=n.text;return n;}
-(function(){var S=[{"day": "Monday", "name": "Egg Monday", "pair": "EPŌS Scramble & a Latte", "price": "17", "img": "monday", "end": "13:00", "win": "8 AM – 1 PM", "inc": ""}, {"day": "Tuesday", "name": "Shakshuka Tuesday", "pair": "Shakshuka, Bread & a Latte", "price": "17", "img": "tuesday", "end": "17:00", "win": "8 AM – 5 PM", "inc": "LATTE OR CHAI LATTE"}, {"day": "Wednesday", "name": "Soup Wednesday", "pair": "Any Soup & a Hot Sandwich", "price": "18", "img": "wednesday", "end": "17:00", "win": "11 AM – 5 PM", "inc": "BORSCHT OR PASTRAMI +$2"}, {"day": "Thursday", "name": "Croissant Thursday", "pair": "Egg Croissant & a Latte", "price": "16", "img": "thursday", "end": "17:00", "win": "8 AM – 5 PM", "inc": "TWO FOR $30  ·  BACON +$1"}, {"day": "Friday", "name": "Pastrami Friday", "pair": "Pastrami Melt & an Americano", "price": "17", "img": "friday", "end": "13:00", "win": "8 AM – 1 PM", "inc": ""}, {"day": "Saturday", "name": "Brunch Saturday", "pair": "Salmon & Guac Croissant, with a Latte", "price": "19", "img": "saturday", "end": "13:00", "win": "9 AM – 1 PM", "inc": "LATTE OR CHAI LATTE"}, {"day": "Sunday", "name": "Sweet Sunday", "pair": "Sticky Toffee Pudding & a Latte", "price": "15", "img": "sunday", "end": "17:00", "win": "12 – 5 PM", "inc": "APPLE CRUMBLE INSTEAD +$1"}];var n=eposNow(),s=S[n.sp],c=document.getElementById("heroCard");c.src="img/specials/"+s.img+".webp";c.alt=s.name+": "+s.pair+", $"+s.price;})();</script>
+(function(){var S=[{"day": "Monday", "name": "Egg Monday", "pair": "EPŌS Scramble & a Latte", "price": "17", "img": "monday", "end": "13:00", "win": "8 AM – 1 PM", "inc": ""}, {"day": "Tuesday", "name": "Shakshuka Tuesday", "pair": "Shakshuka, Bread & a Latte", "price": "17", "img": "tuesday", "end": "17:00", "win": "8 AM – 5 PM", "inc": "LATTE OR CHAI LATTE"}, {"day": "Wednesday", "name": "Soup Wednesday", "pair": "Any Soup & a Hot Sandwich", "price": "18", "img": "wednesday", "end": "17:00", "win": "11 AM – 5 PM", "inc": "BORSCHT OR PASTRAMI +$2"}, {"day": "Thursday", "name": "Croissant Thursday", "pair": "Egg Croissant & a Latte", "price": "16", "img": "thursday", "end": "17:00", "win": "8 AM – 5 PM", "inc": "TWO FOR $30  ·  BACON +$1"}, {"day": "Friday", "name": "Pastrami Friday", "pair": "Pastrami Melt & an Americano", "price": "17", "img": "friday", "end": "13:00", "win": "8 AM – 1 PM", "inc": ""}, {"day": "Saturday", "name": "Brunch Saturday", "pair": "Salmon & Guac Croissant, with a Latte", "price": "19", "img": "saturday", "end": "13:00", "win": "9 AM – 1 PM", "inc": "LATTE OR CHAI LATTE"}, {"day": "Sunday", "name": "Sweet Sunday", "pair": "Sticky Toffee Pudding & a Latte", "price": "15", "img": "sunday", "end": "17:00", "win": "12 – 5 PM", "inc": "APPLE CRUMBLE INSTEAD +$1"}];var n=eposNow(),s=S[n.sp],c=document.getElementById("heroCard");c.src="img/specials/"+s.img+".webp?v=202611230208";c.alt=s.name+": "+s.pair+", $"+s.price;})();</script>
   </div>
 </section>
 
@@ -210,11 +209,11 @@ function eposStatus(id){var n=eposNow(),el=document.getElementById(id);if(!el)re
   <div class="wrap">
     <div class="head">
       <div><div class="label">Daily specials</div><h2 id="sp-h">One plate a day. One price.</h2></div>
-      <p class="lede">Seven days, seven specials, from Egg Monday to Sweet Sunday. Each costs less than ordering the same things separately. Tuesday to Thursday all day, Friday to Monday until 1, Sunday pudding from noon.</p>
+      <p class="lede">Seven days, seven specials, from Egg Monday to Sweet Sunday. Each costs less than ordering the same things separately. Tuesday to Thursday all day (soup from 11). Friday, Saturday and Monday until 1. Sunday pudding 12 to 5.</p>
     </div>
     <div class="carousel">
-      <ol class="week" id="week"><li data-i="0"><picture><img src="img/specials/monday-sm.webp" srcset="img/specials/monday-sm.webp 300w, img/specials/monday.webp 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Egg Monday: EPŌS Scramble &amp; a Latte, $17" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Monday · 8 AM – 1 PM</span><span class="wn">Egg Monday<span class="wp">$17</span></span><span class="ch">Soft scramble on sourdough with gouda and onion jam, and a 12 oz latte, hot or iced.</span></div></li><li data-i="1"><picture><img src="img/specials/tuesday-sm.webp" srcset="img/specials/tuesday-sm.webp 300w, img/specials/tuesday.webp 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Shakshuka Tuesday: Shakshuka, Bread &amp; a Latte, $17" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Tuesday · 8 AM – 5 PM</span><span class="wn">Shakshuka Tuesday<span class="wp">$17</span></span><span class="ch">Our shakshuka with feta and bread, and a 12 oz latte or chai latte. All day.</span></div></li><li data-i="2"><picture><img src="img/specials/wednesday-sm.webp" srcset="img/specials/wednesday-sm.webp 300w, img/specials/wednesday.webp 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Soup Wednesday: Any Soup &amp; a Hot Sandwich, $18" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Wednesday · 11 AM – 5 PM</span><span class="wn">Soup Wednesday<span class="wp">$18</span></span><span class="ch">Mushroom velouté or chicken &amp; barley, with a Turkey &amp; Gouda or Mediterranean Veggie hot sandwich. Borscht or pastrami +$2. Lunch until 5.</span></div></li><li data-i="3"><picture><img src="img/specials/thursday-sm.webp" srcset="img/specials/thursday-sm.webp 300w, img/specials/thursday.webp 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Croissant Thursday: Egg Croissant &amp; a Latte, $16" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Thursday · 8 AM – 5 PM</span><span class="wn">Croissant Thursday<span class="wp">$16</span></span><span class="ch">The EPŌS Egg Croissant and a 12 oz latte. Bring a friend: two for $30. Bacon +$1. All day.</span></div></li><li data-i="4"><picture><img src="img/specials/friday-sm.webp" srcset="img/specials/friday-sm.webp 300w, img/specials/friday.webp 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Pastrami Friday: Pastrami Melt &amp; an Americano, $17" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Friday · 8 AM – 1 PM</span><span class="wn">Pastrami Friday<span class="wp">$17</span></span><span class="ch">Pastrami &amp; Gouda Melt with dill pickles and mustard, pressed to order, and an Americano, hot or iced.</span></div></li><li data-i="5"><picture><img src="img/specials/saturday-sm.webp" srcset="img/specials/saturday-sm.webp 300w, img/specials/saturday.webp 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Brunch Saturday: Salmon &amp; Guac Croissant, with a Latte, $19" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Saturday · 9 AM – 1 PM</span><span class="wn">Brunch Saturday<span class="wp">$19</span></span><span class="ch">Scrambled eggs, smoked salmon, guac and gouda in a butter croissant, with a 12 oz latte or chai latte.</span></div></li><li data-i="6"><picture><img src="img/specials/sunday-sm.webp" srcset="img/specials/sunday-sm.webp 300w, img/specials/sunday.webp 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Sweet Sunday: Sticky Toffee Pudding &amp; a Latte, $15" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Sunday · 12 – 5 PM</span><span class="wn">Sweet Sunday<span class="wp">$15</span></span><span class="ch">Warm sticky toffee pudding with vanilla ice cream, and a 12 oz latte. Sunday afternoon, 12 to 5.</span></div></li><li class="xtra"><div class="tx"><span class="rn">Tue – Thu · 2 – 5 PM</span><span class="wn">Coffee &amp; Cake<span class="wp">$11</span></span><span class="ch">Any slice of cake with a 12 oz latte, chai, matcha or London Fog. Tuesday to Thursday, 2 to 5.</span></div></li></ol>
-      <div class="cnav ui" aria-hidden="true"><button type="button" class="cbtn" id="cPrev" aria-label="Previous special">&#8592;</button><span class="chint">Swipe for the week</span><button type="button" class="cbtn" id="cNext" aria-label="Next special">&#8594;</button></div>
+      <ol class="week" id="week"><li data-i="0"><picture><img src="img/specials/monday-sm.webp?v=202611230208" srcset="img/specials/monday-sm.webp?v=202611230208 300w, img/specials/monday.webp?v=202611230208 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Egg Monday: EPŌS Scramble &amp; a Latte, $17" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Monday · 8 AM – 1 PM</span><span class="wn">Egg Monday<span class="wp">$17</span></span><span class="ch">Soft scramble on sourdough with gouda and onion jam, and a 12 oz latte, hot or iced.</span></div></li><li data-i="1"><picture><img src="img/specials/tuesday-sm.webp?v=202611230208" srcset="img/specials/tuesday-sm.webp?v=202611230208 300w, img/specials/tuesday.webp?v=202611230208 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Shakshuka Tuesday: Shakshuka, Bread &amp; a Latte, $17" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Tuesday · 8 AM – 5 PM</span><span class="wn">Shakshuka Tuesday<span class="wp">$17</span></span><span class="ch">Our shakshuka with feta and bread, and a 12 oz latte or chai latte. All day.</span></div></li><li data-i="2"><picture><img src="img/specials/wednesday-sm.webp?v=202611230208" srcset="img/specials/wednesday-sm.webp?v=202611230208 300w, img/specials/wednesday.webp?v=202611230208 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Soup Wednesday: Any Soup &amp; a Hot Sandwich, $18" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Wednesday · 11 AM – 5 PM</span><span class="wn">Soup Wednesday<span class="wp">$18</span></span><span class="ch">Mushroom velouté or chicken &amp; barley, with a Turkey &amp; Gouda or Mediterranean Veggie hot sandwich. Borscht or pastrami +$2. Lunch until 5.</span></div></li><li data-i="3"><picture><img src="img/specials/thursday-sm.webp?v=202611230208" srcset="img/specials/thursday-sm.webp?v=202611230208 300w, img/specials/thursday.webp?v=202611230208 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Croissant Thursday: Egg Croissant &amp; a Latte, $16" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Thursday · 8 AM – 5 PM</span><span class="wn">Croissant Thursday<span class="wp">$16</span></span><span class="ch">The EPŌS Egg Croissant and a 12 oz latte. Bring a friend: two for $30. Bacon +$1. All day.</span></div></li><li data-i="4"><picture><img src="img/specials/friday-sm.webp?v=202611230208" srcset="img/specials/friday-sm.webp?v=202611230208 300w, img/specials/friday.webp?v=202611230208 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Pastrami Friday: Pastrami Melt &amp; an Americano, $17" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Friday · 8 AM – 1 PM</span><span class="wn">Pastrami Friday<span class="wp">$17</span></span><span class="ch">Pastrami &amp; Gouda Melt with dill pickles and mustard, pressed to order, and an Americano, hot or iced.</span></div></li><li data-i="5"><picture><img src="img/specials/saturday-sm.webp?v=202611230208" srcset="img/specials/saturday-sm.webp?v=202611230208 300w, img/specials/saturday.webp?v=202611230208 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Brunch Saturday: Salmon &amp; Guac Croissant, with a Latte, $19" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Saturday · 9 AM – 1 PM</span><span class="wn">Brunch Saturday<span class="wp">$19</span></span><span class="ch">Scrambled eggs, smoked salmon, guac and gouda in a butter croissant, with a 12 oz latte or chai latte.</span></div></li><li data-i="6"><picture><img src="img/specials/sunday-sm.webp?v=202611230208" srcset="img/specials/sunday-sm.webp?v=202611230208 300w, img/specials/sunday.webp?v=202611230208 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Sweet Sunday: Sticky Toffee Pudding &amp; a Latte, $15" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Sunday · 12 – 5 PM</span><span class="wn">Sweet Sunday<span class="wp">$15</span></span><span class="ch">Warm sticky toffee pudding with vanilla ice cream, and a 12 oz latte. Sunday afternoon, 12 to 5.</span></div></li><li class="xtra" data-x="1"><picture><img src="img/specials/coffee-cake-sm.webp?v=202611230208" srcset="img/specials/coffee-cake-sm.webp?v=202611230208 300w, img/specials/coffee-cake.webp?v=202611230208 720w" sizes="(max-width:760px) 74vw, (max-width:1000px) 30vw, 260px" alt="Coffee &amp; Cake, Tuesday to Thursday 2 to 5 PM, $11" width="300" height="375" loading="lazy"></picture><div class="tx"><span class="rn">Tue – Thu · 2 – 5 PM</span><span class="wn">Coffee &amp; Cake<span class="wp">$11</span></span><span class="ch">Any slice of cake with a 12 oz latte, chai, matcha or London Fog. Tuesday to Thursday, 2 to 5.</span></div></li></ol>
+      <div class="cnav ui"><button type="button" class="cbtn" id="cPrev" aria-label="Previous special">&#8592;</button><span class="chint">Swipe for the week</span><button type="button" class="cbtn" id="cNext" aria-label="Next special">&#8594;</button></div>
     </div>
   </div>
 </section>
@@ -257,7 +256,7 @@ function eposStatus(id){var n=eposNow(),el=document.getElementById(id);if(!el)re
   <nav class="ui" aria-label="Footer"><a href="menu.html">Menu</a><a href="https://www.instagram.com/epos.coffee/" target="_blank" rel="noopener">Instagram</a><a href="https://www.google.com/maps/search/?api=1&amp;query=EPOS+Coffee+Bar+290+Gerrard+St+E+Toronto" target="_blank" rel="noopener">Directions</a></nav>
 </footer>
 <nav class="bar ui" aria-label="Quick links">
-  <a href="menu.html">Menu</a><a href="index.html#specials">Today</a><a href="https://www.google.com/maps/search/?api=1&amp;query=EPOS+Coffee+Bar+290+Gerrard+St+E+Toronto" target="_blank" rel="noopener">Directions</a>
+  <a href="menu.html">Menu</a><a href="#today">Today</a><a href="https://www.google.com/maps/search/?api=1&amp;query=EPOS+Coffee+Bar+290+Gerrard+St+E+Toronto" target="_blank" rel="noopener">Directions</a>
 </nav>
 <script>
 
@@ -279,9 +278,10 @@ document.querySelectorAll("#hours li").forEach(function(li){if(+li.dataset.d===n
 var s=S[n.sp], when=n.tomorrow?"Tomorrow":"Today";
 document.getElementById("heroCap").textContent=s.day+" · "+s.win;
 var cc=(n.dow>=2&&n.dow<=4&&n.m>=14*60&&n.m<17*60);
-document.getElementById("spBtn").textContent=cc?"Now: Coffee & Cake — $11":when+": "+s.name+" — $"+s.price;
-document.getElementById("spNote").textContent=cc?"Any cake and a 12 oz latte, chai, matcha or London Fog, until 5.":(n.tomorrow?"Today's special has finished. Here's tomorrow's.":"Served "+s.win+", while it lasts.");
-var li=document.querySelector('#week li[data-i="'+n.sp+'"]');if(li){li.classList.add("today");var t=document.createElement("span");t.className="tag";t.textContent=when;var tx=li.querySelector(".tx");tx.insertBefore(t,tx.firstChild);}
+document.getElementById("spBtn").textContent=when+": "+s.name+" — $"+s.price;
+document.getElementById("spNote").textContent=cc?"Also now: Coffee & Cake, $11, until 5.":(n.tomorrow?"Today’s special has finished. Here’s tomorrow’s.":"Served "+s.win+", while it lasts.");
+if(cc){var x=document.querySelector('#week li.xtra .tx');if(x){var t2=document.createElement("span");t2.className="tag";t2.textContent="Now";x.insertBefore(t2,x.firstChild);}}
+var li=document.querySelector('#week li[data-i="'+n.sp+'"]');if(li){li.classList.add("today");li.id="today";var t=document.createElement("span");t.className="tag";t.textContent=when;var tx=li.querySelector(".tx");tx.insertBefore(t,tx.firstChild);}
 setInterval(function(){eposStatus("status");eposStatus("status2");},60000);
 var w=document.getElementById("week"),pv=document.getElementById("cPrev"),nx=document.getElementById("cNext");
 function step(){var a=w.children[0],b=w.children[1];return b.offsetLeft-a.offsetLeft;}

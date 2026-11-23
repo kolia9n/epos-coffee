@@ -29,7 +29,7 @@ EXTRA = dict(name="Coffee & Cake", days="Tue – Thu", pair="Any Cake & a 12 oz 
              start="14:00", end="17:00", inc="LATTE, CHAI, MATCHA OR LONDON FOG",
              cakes="EPŌS Cake  ·  Carrot Cake  ·  Tiramisu  ·  Mint Panna Cotta",
              desc="Any slice of cake with a 12 oz latte, chai, matcha or London Fog. Tuesday to Thursday, 2 to 5.")
-RULE = "Tue–Thu specials all day. Fri–Mon until 1. Sunday pudding from noon."
+RULE = "Tue–Thu all day (soup from 11). Fri, Sat and Mon until 1. Sunday pudding 12–5."
 
 def nice(t):
     h, m = map(int, t.split(":")); ap = "AM" if h < 12 else "PM"; h12 = h - 12 if h > 12 else h
